@@ -99,7 +99,7 @@ function formatMes(num) {
 // ============================================================
 async function llamarIA(prompt) {
   // Tu API key gratuita de Google AI Studio
-  const API_KEY = 'AQUI_VA_TU_API_KEY'; 
+  const API_KEY = 'AQ.Ab8RN6LN8-krV-dN5WQP8Y7RkujUwSE7jmW3xC923pTnf1CW6A';
   
   // Endpoint oficial para el modelo Gemini 2.5 Flash
   const URL_API = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
