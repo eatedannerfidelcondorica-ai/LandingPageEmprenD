@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EmprenD IA · Tienda</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="comprador-page">
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-brand">EmprenD <span>IA</span></div>
+    <div class="nav-right">
+      <span id="navBienvenida" class="nav-bienvenida">👋 Bienvenido</span>
+      <button class="btn-carrito" onclick="toggleCarrito()">
+        🛒 Carrito <span id="carritoCount" class="carrito-badge">0</span>
+      </button>
+      <button class="btn-login" onclick="cerrarSesion()">Cerrar Sesión</button>
+    </div>
+  </nav>
+
+  <!-- BIENVENIDA BANNER -->
+  <div class="bienvenida-comprador" id="bienvenidaBanner">
+    <h2 id="bienvenidaCompradorNombre">👋 Bienvenido</h2>
+    <p>Explora los productos de los microemprendedores locales de Bolivia</p>
+  </div>
+
+  <div class="comprador-layout">
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <section class="tienda-main">
+
+      <!-- TABS: Tienda / Perfiles Emprendedores -->
+      <div class="tienda-tabs">
+        <button class="tab-btn active" onclick="cambiarTab('tienda', this)">🏪 Tienda</button>
+        <button class="tab-btn" onclick="cambiarTab('perfiles', this)">👨‍💼 Perfiles de Emprendedores</button>
+      </div>
+
+      <!-- TAB: TIENDA -->
+      <div id="tab-tienda" class="tab-contenido activo">
+
+        <h2>🏪 Tienda de Emprendedores</h2>
+        <p class="sub">Apoya a los microemprendimientos locales de Bolivia</p>
+
+        <!-- FILTROS Y BÚSQUEDA -->
+        <div class="filtros-bar">
+          <input type="text" id="buscadorProducto" placeholder="🔍 Buscar producto..." class="filtro-input" oninput="filtrarProductos()">
+          <div class="categorias-scroll" id="categoriasBar">
+            <button class="cat-btn active" onclick="filtrarPorCategoria('', this)">🌐 Todos</button>
+            <button class="cat-btn" onclick="filtrarPorCategoria('Ropa', this)">👗 Ropa</button>
+            <button class="cat-btn" onclick="filtrarPorCategoria('Tecnología', this)">💻 Tecnología</button>
+            <button class="cat-btn" onclick="filtrarPorCategoria('Alimentos', this)">🍔 Alimentos</button>
+            <button class="cat-btn" onclick="filtrarPorCategoria('Calzado', this)">👟 Calzado</button>
+            <button class="cat-btn" onclick="filtrarPorCategoria('Accesorios', this)">💍 Accesorios</button>
+            <button class="cat-btn" onclick="filtrarPorCategoria('Hogar', this)">🏠 Hogar</button>
+            <button class="cat-btn" onclick="filtrarPorCategoria('Belleza', this)">💄 Belleza</button>
+            <button class="cat-btn" onclick="filtrarPorCategoria('Deportes', this)">⚽ Deportes</button>
+            <button class="cat-btn" onclick="filtrarPorCategoria('Otros', this)">📦 Otros</button>
+          </div>
+        </div>
+
+        <!-- GRID DE PRODUCTOS -->
+        <div id="productosGrid" class="productos-grid">
+          <div class="cargando-cards">Cargando productos...</div>
+        </div>
+
+      </div>
+
+      <!-- TAB: PERFILES EMPRENDEDORES -->
+      <div id="tab-perfiles" class="tab-contenido">
+        <h2>👨‍💼 Perfiles de Emprendedores</h2>
+        <p class="sub">Conoce a los emprendedores y explora todo lo que venden</p>
+        <div id="gridPerfilesEmp" class="perfiles-emp-grid">
+          <div class="cargando-cards">Cargando emprendedores...</div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- CARRITO LATERAL -->
+    <aside id="carritoPanel" class="carrito-panel">
+      <h3>🛒 Tu Carrito</h3>
+      <div id="carritoItems" class="carrito-items">
+        <p class="carrito-vacio">Tu carrito está vacío</p>
+      </div>
+      <div class="carrito-footer">
+        <div class="carrito-total">
+          <span>Total:</span>
+          <strong id="carritoTotal">Bs. 0.00</strong>
+        </div>
+        <button class="btn-amarillo full" onclick="abrirModalPedido()">✅ Confirmar Pedido</button>
+        <p id="pedidoMsg" class="msg"></p>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- ===== MODAL VER PRODUCTO ===== -->
+  <div id="modalVerProducto" class="modal-overlay" style="display:none;">
+    <div class="modal-box modal-producto-detalle">
+      <div class="modal-header">
+        <h3 id="modalProdNombre">Producto</h3>
+        <button class="modal-close" onclick="cerrarModalProducto()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="prod-detalle-grid">
+          <div class="prod-detalle-foto">
+            <img id="modalProdFoto" src="" alt="Foto producto" style="width:100%; border-radius:12px; object-fit:cover; max-height:280px;">
+            <div id="modalProdFotoPlaceholder" style="width:100%; height:220px; background:#1e2a4a; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:60px;">📦</div>
+          </div>
+          <div class="prod-detalle-info">
+            <span id="modalProdCategoria" class="prod-cat-badge"></span>
+            <p id="modalProdDesc" class="prod-desc-detalle"></p>
+            <div class="prod-precio-grande" id="modalProdPrecio"></div>
+            <p class="prod-emprendedor-label">🏪 Vendido por: <strong id="modalProdEmprendedor"></strong></p>
+
+            <!-- Modo de entrega -->
+            <div class="detalle-seccion">
+              <h4>🚚 Modo de Entrega</h4>
+              <div id="modalEntregaOpciones" class="entrega-opciones-lista">
+                <p class="cargando">Cargando opciones...</p>
+              </div>
+            </div>
+
+            <!-- Método de pago -->
+            <div class="detalle-seccion">
+              <h4>💳 Método de Pago</h4>
+              <div class="metodos-pago-btns">
+                <button class="btn-metodo-pago" id="btnEfectivo" onclick="seleccionarPago('efectivo')" style="display:none;">
+                  💵 Efectivo
+                </button>
+                <button class="btn-metodo-pago" id="btnQR" onclick="seleccionarPago('qr')" style="display:none;">
+                  📲 Pagar con QR
+                </button>
+              </div>
+              <!-- QR display -->
+              <div id="qrDisplay" style="display:none; text-align:center; margin-top:12px;">
+                <p style="font-size:13px; color:#888; margin-bottom:8px;">Escanea el QR para pagar:</p>
+                <div id="qrImagenesWrap" class="qr-imagenes-wrap"></div>
+              </div>
+              <div id="pagoEfectivoMsg" style="display:none; margin-top:12px; padding:12px; background:#e8f5e9; border-radius:8px; color:#388e3c; font-weight:600;">
+                💵 Pagarás en efectivo al momento de la entrega.
+              </div>
+            </div>
+
+            <button class="btn-amarillo full" style="margin-top:16px;" onclick="agregarAlCarritoDesdeModal()">
+              🛒 Agregar al Carrito
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL CONFIRMAR PEDIDO ===== -->
+  <div id="modalPedido" class="modal-overlay" style="display:none;">
+    <div class="modal-box modal-box-wide">
+      <div class="modal-header">
+        <h3>✅ Confirmar Pedido</h3>
+        <button class="modal-close" onclick="cerrarModalPedido()">✕</button>
+      </div>
+      <div class="modal-body">
+        <h4>📦 Resumen de tu pedido</h4>
+        <div id="resumenPedidoItems" class="resumen-pedido-lista"></div>
+        <div class="resumen-total-row">
+          <span>Total a pagar:</span>
+          <strong id="resumenPedidoTotal" style="color:#f5a623; font-size:1.3rem;">Bs. 0.00</strong>
+        </div>
+
+        <h4 style="margin-top:20px;">🚚 Seleccionar Modo de Entrega</h4>
+        <select id="pedidoModoEntrega" class="config-input">
+          <option value="">— Seleccionar —</option>
+          <option value="Físico">🤝 Entrega Física</option>
+          <option value="InDrive">🚗 InDrive / Delivery</option>
+          <option value="Envío">📦 Envío por Paquetería</option>
+        </select>
+
+        <h4 style="margin-top:16px;">💳 Método de Pago</h4>
+        <div class="metodos-pago-btns" id="pedidoMetodosPago">
+          <button class="btn-metodo-pago" onclick="seleccionarPagoFinal('efectivo')">💵 Efectivo</button>
+          <button class="btn-metodo-pago" onclick="seleccionarPagoFinal('qr')">📲 QR</button>
+        </div>
+        <div id="pedidoQRDisplay" style="display:none; text-align:center; margin-top:12px;">
+          <p style="font-size:13px; color:#888;">Escanea el QR para pagar:</p>
+          <div id="pedidoQRImagenes" class="qr-imagenes-wrap"></div>
+        </div>
+        <div id="pedidoEfectivoMsg" style="display:none; margin-top:12px; padding:12px; background:#e8f5e9; border-radius:8px; color:#388e3c; font-weight:600;">
+          💵 Pagarás en efectivo al momento de la entrega.
+        </div>
+
+        <h4 style="margin-top:16px;">📝 Nota para el emprendedor (opcional)</h4>
+        <textarea id="pedidoNota" class="config-input" rows="2" placeholder="Ej: Entregar en la tarde, color preferido..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-amarillo" onclick="enviarPedidoFinal()">📨 Enviar Pedido</button>
+        <button class="btn-secundario" onclick="cerrarModalPedido()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL PERFIL EMPRENDEDOR ===== -->
+  <div id="modalPerfilEmp" class="modal-overlay" style="display:none;">
+    <div class="modal-box modal-box-wide">
+      <div class="modal-header">
+        <h3>🏪 Perfil del Emprendedor</h3>
+        <button class="modal-close" onclick="cerrarModalPerfilEmp()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="comprador-perfil-header">
+          <img id="modalEmpFoto" src="" alt="Foto" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:3px solid #f5a623; display:none;">
+          <div id="modalEmpFotoIcon" style="width:80px; height:80px; border-radius:50%; background:#1e2a4a; display:flex; align-items:center; justify-content:center; font-size:40px; border:3px solid #f5a623;">🏪</div>
+          <div>
+            <h3 id="modalEmpNombre">—</h3>
+            <span id="modalEmpCategoria" class="prod-cat-badge"></span>
+          </div>
+        </div>
+
+        <!-- Puntuación y reseña -->
+        <div class="rating-section">
+          <h4>⭐ Puntuación del Emprendedor</h4>
+          <div id="modalEmpRating" class="rating-display">
+            <span class="rating-num" id="modalEmpRatingNum">—</span>
+            <div class="estrellas" id="modalEmpEstrellas"></div>
+            <span id="modalEmpTotalResenas" style="font-size:12px; color:#888;"></span>
+          </div>
+          <div class="resena-form">
+            <p style="font-size:13px; font-weight:600; margin-bottom:8px;">Tu puntuación:</p>
+            <div class="estrellas-input" id="estrellasInput">
+              <span class="estrella-inp" onclick="seleccionarEstrella(1)">★</span>
+              <span class="estrella-inp" onclick="seleccionarEstrella(2)">★</span>
+              <span class="estrella-inp" onclick="seleccionarEstrella(3)">★</span>
+              <span class="estrella-inp" onclick="seleccionarEstrella(4)">★</span>
+              <span class="estrella-inp" onclick="seleccionarEstrella(5)">★</span>
+            </div>
+            <textarea id="resenaTexto" class="config-input" rows="2" placeholder="Escribe tu experiencia con este emprendedor..." style="margin-top:8px;"></textarea>
+            <button class="btn-azul" style="margin-top:8px;" onclick="enviarResena()">📨 Enviar Reseña</button>
+            <p id="msgResena" class="config-msg"></p>
+          </div>
+          <div id="listaResenas" class="resenas-lista" style="margin-top:12px;"></div>
+        </div>
+
+        <h4 style="margin-top:20px;">🛍️ Productos de este Emprendedor</h4>
+        <div id="modalEmpProductos" class="productos-grid" style="padding:0;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secundario" onclick="cerrarModalPerfilEmp()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

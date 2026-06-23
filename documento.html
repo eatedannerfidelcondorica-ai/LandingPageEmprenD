@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EmprenD IA · Documento Final</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="nav-brand">EmprenD <span></span></div>
+    <div class="nav-center">
+      <a href="index.html">← Volver al inicio</a>
+    </div>
+  </nav>
+
+  <header class="hero-title">
+    <p class="hero-eyebrow">Universidad Privada "Franz Tamayo" · Ingeniería en Sistemas · El Alto, Bolivia 2026</p>
+    <h1>Sistema Web de Monitoreo y Control de Microemprendimientos Locales Implementando IA</h1>
+    <p class="hero-meta">Estudiante: Danner Fidel Condori Candia &nbsp;·&nbsp; Docente: Ing. Javier Elvis Canqui Llusco</p>
+    <button class="btn-exportar" onclick="exportarDocumento()">📄 Exportar Documento Completo (PDF)</button>
+  </header>
+
+  <div class="doc-page">
+    <div class="doc-sidebar">
+      <h4>Capítulos</h4>
+      <button class="cap-btn active" onclick="mostrarCap('cap1', this)">📖 Capítulo 1: Introduccion</button>
+      <button class="cap-btn" onclick="mostrarCap('cap2', this)">📖 Capítulo 2: Teórico</button>
+      <button class="cap-btn" onclick="mostrarCap('cap3', this)">📖 Capítulo 3: Desarrollo</button>
+      <button class="cap-btn" onclick="mostrarCap('cap4', this)">📊 Matriz RTM Ajustada</button>
+    </div>
+
+    <div class="doc-content" id="doc-content">
+
+      <!-- ===================== CAPÍTULO 1 ===================== -->
+      <div id="cap1" class="cap-vista activo">
+        <div class="cap-numero-big">01</div>
+        <h2>Marco Introductorio del Proyecto</h2>
+        <p class="cap-intro">Este capítulo presenta el contexto general del sistema, el problema identificado bajo el enfoque ABR, y los objetivos planteados para el desarrollo de la plataforma.</p>
+
+        <div class="cap-secciones">
+          <div class="cap-sec">
+            <h4>1.1 Introducción y Contexto Tecnológico</h4>
+            <p>En el entorno económico actual, los microemprendimientos locales representan uno de los pilares más fundamentales para la generación de empleo y el dinamismo social. No obstante, la gran mayoría de estos negocios carece de herramientas informáticas accesibles y avanzadas que les permitan estructurar, analizar y optimizar sus flujos de caja, gestión de inventarios y captación de clientes.</p>
+            <p>El presente proyecto describe la conceptualización, diseño e implementación de un "Sistema Web de Monitoreo y Control de Microemprendimientos Locales Implementando Inteligencia Artificial". Esta plataforma tiene el propósito de democratizar el uso de tecnologías de Business Intelligence (BI) y analítica predictiva, proporcionando un panel de control intuitivo y automatizado que actúe como un consultor financiero y operativo digital para el microempresario.</p>
+            <p>Las microempresas suelen enfrentarse a problemas críticos como el quiebre de stock o la falta de previsión en sus ingresos mensuales, lo que eleva drásticamente su tasa de mortalidad operativa durante los primeros años de vida. La ausencia de un registro estructurado de datos impide que estos negocios identifiquen patrones de compra o predigan con exactitud cuándo deben reabastecer sus almacenes, dejándolos en una situación de vulnerabilidad frente a competidores de mayor escala.</p>
+          </div>
+
+          <div class="cap-sec">
+            <h4>1.2 Planteamiento del Problema</h4>
+            <p>Las microempresas locales se enfrentan de manera reiterada a altas tasas de mortalidad operativa durante sus primeros dos años de vida. Esta problemática surge principalmente por la falta de un control riguroso de sus datos de transacciones financieras y la incapacidad para anticipar fluctuaciones de la demanda o desabastecimientos de stock. La gestión se realiza de forma empírica o mediante registros manuales propensos a errores.</p>
+            <h5>1.2.1 Formulación de la Pregunta Esencial bajo Enfoque ABR</h5>
+            <blockquote class="pregunta-abr">
+              ¿De qué manera un sistema web integrado con modelos de inteligencia artificial predictiva puede mitigar los errores de gestión operativa y financiera en los microemprendimientos locales, garantizando la trazabilidad de datos y la automatización de la toma de decisiones estratégicas?
+            </blockquote>
+          </div>
+
+          <div class="cap-sec">
+            <h4>1.3 Objetivos del Proyecto</h4>
+            <h5>1.3.1 Objetivo General</h5>
+            <p>Desarrollar e implementar un sistema web integral de monitoreo y control operativo para microemprendimientos locales mediante la incorporación de módulos analíticos basados en inteligencia artificial, con el fin de optimizar la toma de decisiones financieras, predecir el comportamiento del inventario y reducir el índice de fallas de gestión en el mercado local.</p>
+            <h5>1.3.2 Objetivos Específicos Operacionales</h5>
+            <ol>
+              <li>Diseñar un módulo web de autenticación y registro de datos comerciales que permita capturar transacciones de ingresos y egresos de forma segura y estructurada.</li>
+              <li>Desarrollar un motor analítico basado en Inteligencia Artificial que procese el historial de ventas para generar predicciones automáticas de demanda de stock.</li>
+              <li>Implementar un panel de control interactivo (Dashboard) que visualice indicadores clave de rendimiento (KPIs) financieros y de inventario en tiempo real.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== CAPÍTULO 2 ===================== -->
+      <div id="cap2" class="cap-vista">
+        <div class="cap-numero-big">02</div>
+        <h2>Marco Teórico</h2>
+        <p class="cap-intro">Fundamentos conceptuales del sistema, de la metodología aplicada y de las reglas de negocio del sector que sustentan el diseño de la plataforma.</p>
+
+        <div class="cap-secciones">
+          <div class="cap-sec">
+            <h4>2.1 Definiciones Enfocadas al Sistema</h4>
+            <p>De acuerdo con Roger Pressman en su obra "Ingeniería del Software: Un Enfoque Práctico", un sistema basado en web es una aplicación que evolucionó desde un conjunto de archivos hipermediales estáticos hasta sistemas complejos que ejecutan lógica de negocio, interactúan con bases de datos corporativas y proveen interfaces dinámicas al usuario final. La taxonomía de esta solución se clasifica como una Aplicación Web Orientada a Datos y Análisis Predictivo.</p>
+            <p>Asimismo, Ian Sommerville establece en "Ingeniería de Software" que los sistemas críticos de información deben garantizar propiedades de fiabilidad, disponibilidad y seguridad. El sistema implementa este enfoque distribuyendo las responsabilidades mediante servicios desacoplados que procesan algoritmos de Machine Learning (IA) para la interpretación de tendencias mercantiles.</p>
+          </div>
+
+          <div class="cap-sec">
+            <h4>2.2 Definiciones Enfocadas a la Metodología</h4>
+            <ul class="lista-definiciones">
+              <li><strong>Metodologías Ágiles (Scrum):</strong> marco de trabajo que promueve el desarrollo incremental y evolutivo a través de iteraciones cortas llamadas Sprints. Permite adaptar el software basándose en el feedback directo de los microempresarios.</li>
+              <li><strong>UML (Lenguaje de Modelado Unificado):</strong> lenguaje estandarizado para visualizar, especificar, construir y documentar los artefactos de un sistema de software. Se aplican los Diagramas de Casos de Uso para representar los requerimientos funcionales desde la perspectiva del actor (usuario).</li>
+              <li><strong>Ingeniería de Requisitos:</strong> proceso técnico que comprende el descubrimiento, análisis, especificación y verificación de los servicios que debe proporcionar el sistema y las restricciones bajo las cuales operará.</li>
+              <li><strong>Modelo Entidad-Relación (DER):</strong> técnica de modelado lógico de datos que describe las estructuras de información globales que serán mapeadas en un motor de base de datos relacional, definiendo entidades, atributos claves (PK/FK) y cardinalidades.</li>
+            </ul>
+          </div>
+
+          <div class="cap-sec">
+            <h4>2.3 Definiciones Enfocadas al Problema y Reglas de Negocio del Sector</h4>
+            <ul class="lista-definiciones">
+              <li><strong>Flujo de Caja (Cash Flow):</strong> registro continuo y cronológico de los flujos de entrada (ventas, aportes) y salida (compras, servicios) de dinero en efectivo.</li>
+              <li><strong>Punto de Reorden (Reorder Point):</strong> nivel mínimo de existencias de un producto que indica la necesidad inmediata de realizar un nuevo pedido de reabastecimiento.</li>
+              <li><strong>Predicción por IA (Pronóstico de Demanda):</strong> algoritmo predictivo que utiliza regresiones lineales y series temporales para estimar el volumen de ventas futuro de un artículo basándose en registros históricos.</li>
+              <li><strong>Regla de Negocio 1:</strong> un microemprendimiento solo puede visualizar y editar sus propios registros transaccionales e inventarios.</li>
+              <li><strong>Regla de Negocio 2:</strong> el sistema generará una alerta automática de stock crítico cuando el inventario físico sea menor o igual al punto de reorden calculado por el algoritmo de IA.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+ <!-- ===================== CAPÍTULO 3 ===================== -->
+<div id="cap3" class="cap-vista">
+  <div class="cap-numero-big">03</div>
+  <h2>Marco de Desarrollo</h2>
+  <p class="cap-intro">Documentación técnica completa: ingeniería de requisitos, modelado de comportamiento y datos, y arquitectura del sistema.</p>
+
+  <div class="cap-secciones">
+
+    <!-- ── 3.1 Ingeniería de Requisitos ── -->
+    <div class="cap-sec">
+      <h4>3.1 Ingeniería de Requisitos</h4>
+
+      <h5>3.1.1 Requisitos Funcionales</h5>
+      <table class="tabla-doc">
+        <thead>
+          <tr><th>Código</th><th>Especificación</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>RF-01</td><td>Registro de Ventas: el Sistema Web permitirá registrar una nueva transacción de venta, ingresando el monto, descripción, fecha y categoría obligatoriamente.</td></tr>
+          <tr><td>RF-02</td><td>Predicción por IA: el Sistema Web calculará automáticamente las predicciones de demanda de inventario cuando el usuario presione el botón de optimización de IA.</td></tr>
+          <tr><td>RF-03</td><td>Gráfico Analítico: el Sistema Web desplegará un gráfico interactivo de flujo de caja filtrado por rangos mensuales o anuales.</td></tr>
+          <tr><td>RF-04</td><td>Alertas de Stock: el Sistema Web enviará una alerta de notificación visual cuando el inventario físico caiga por debajo del punto de reorden.</td></tr>
+          <tr><td>RF-05</td><td>Captura de Leads: el Sistema Web permitirá capturar los datos de contacto de clientes potenciales a través de un formulario de suscripción en la Landing Page.</td></tr>
+        </tbody>
+      </table>
+
+      <figure class="doc-figura">
+        <img class="doc-img" src="img/Requisitos Funcionales (Fórmula Estricta).png" alt="Cuadro de Requerimientos Funcionales RF-01 a RF-05">
+        <figcaption>Figura 1: Cuadro de Requerimientos Funcionales (RF-01 a RF-05).</figcaption>
+      </figure>
+
+      <h5>3.1.2 Requisitos No Funcionales (Seguridad e Infraestructura)</h5>
+      <table class="tabla-doc">
+        <thead>
+          <tr><th>Código</th><th>Especificación</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>RNF-01</td><td>Seguridad: el sistema debe cifrar todas las contraseñas de los usuarios en la base de datos utilizando el algoritmo de hash bcrypt.</td></tr>
+          <tr><td>RNF-02</td><td>Infraestructura/Disponibilidad: la interfaz estática y de captación del sistema (Landing Page) debe estar alojada e integrada continuamente en la infraestructura pública de GitHub Pages con un tiempo de actividad del 99.9%.</td></tr>
+        </tbody>
+      </table>
+
+ 
+
+      <h5>3.1.3 Matriz de Priorización MoSCoW (Delimitación del MVP)</h5>
+      <table class="tabla-doc">
+        <thead>
+          <tr><th>Categoría MoSCoW</th><th>Requisitos Asignados / Descripción del MVP</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Must Have</strong> (Obligatorio)</td><td>RF-01 (Registro de transacciones), RF-05 (Formulario de captación en Landing Page), RNF-01 (Cifrado).</td></tr>
+          <tr><td><strong>Should Have</strong> (Debería)</td><td>RF-02 (Cálculo predictivo por IA de stock), RF-03 (Gráficos interactivos de flujo de caja).</td></tr>
+          <tr><td><strong>Could Have</strong> (Podría)</td><td>RF-04 (Alertas visuales automatizadas en pantalla).</td></tr>
+          <tr><td><strong>Won't Have</strong> (Futuro)</td><td>Integración directa con pasarelas de pago bancarias locales en tiempo real.</td></tr>
+        </tbody>
+      </table>
+
+      <h5>3.1.4 Matriz de Trazabilidad de Requisitos (RTM)</h5>
+      <p>Ver detalle completo en la pestaña "Matriz RTM Ajustada".</p>
+    </div>
+
+    <!-- ── 3.2 Modelado de Comportamiento y Persistencia ── -->
+    <div class="cap-sec">
+      <h4>3.2 Modelado de Comportamiento y Persistencia de Datos</h4>
+
+      <h5>3.2.1 Diagrama de Casos de Uso UML (Estructura de Dependencias e Inclusiones)</h5>
+      <p>El actor principal es el <strong>Microempresario</strong>, quien interactúa con el "Sistema Emprende Ahora" a través de tres módulos:</p>
+      <ul class="lista-definiciones">
+        <li><strong>Módulo CashFlow (Control Financiero):</strong> CU-01 Registrar Transacción (Ingreso/Egreso), que incluye «include» CU-01.1 Validar Datos de Entrada y CU-01.2 Actualizar Balance Global en Pantalla. Persiste el registro en SQL.</li>
+        <li><strong>Módulo Predictor IA (Inventarios):</strong> CU-02 Ejecutar Optimización de Stock Avanzada, que incluye CU-02.1 Consultar Historial Transaccional y CU-02.2 Recalcular Límites y Punto de Reorden, procesados por el componente externo Predictor_Engine_IA. CU-03 Visualizar Gráficos y Dashboards extiende «extend» a CU-04 Lanzar Alerta Visual de Stock Crítico bajo la condición <code>stock_actual &lt;= punto_reorden</code>.</li>
+        <li><strong>Módulo Landing Page (Captura):</strong> CU-05 Registrar Lead Interesado, que incluye CU-05.1 Validar Sintaxis de Email (Regex), insertando un lead único en la Base de Datos.</li>
+      </ul>
+
+      <figure class="doc-figura">
+        <img class="doc-img" src="img/Diagrama UML Casos de Uso Estructura.png" alt="Diagrama UML de Casos de Uso – Vista General">
+        <figcaption>Figura 3: Diagrama UML de Casos de Uso — Estructura General de la Plataforma Emprende Ahora.</figcaption>
+      </figure>
+
+      <h5>3.2.2 Escenario de Éxito del Flujo Crítico (Motor Analítico Predictivo RF-02)</h5>
+      <ol>
+        <li>El Microempresario ingresa al panel de control y selecciona la opción "Optimizar con IA".</li>
+        <li>El sistema realiza una llamada asíncrona al servicio de IA solicitando las métricas predictivas.</li>
+        <li>El motor de IA analiza los registros históricos de la entidad "Transaccion".</li>
+        <li>El sistema calcula el volumen proyectado de ventas y actualiza el punto de reorden en la entidad "Inventario".</li>
+        <li>El sistema despliega el reporte predictivo visual en la pantalla sin errores.</li>
+      </ol>
+
+      <figure class="doc-figura">
+        <img class="doc-img" src="img/Diagrama UML Casos de Uso Estructura 2.png" alt="Diagrama UML de Casos de Uso – Relaciones include/extend">
+        <figcaption>Figura 4: Diagrama UML de Casos de Uso del actor Microempresario (CU-01 a CU-05, relaciones include/extend).</figcaption>
+      </figure>
+
+      <h5>3.2.3 Diagrama Entidad-Relación Lógico (DER)</h5>
+      <p>El modelo lógico contempla cuatro entidades principales: <strong>EMPRENDIMIENTO</strong> (id_emprendimiento PK, nombre_negocio, sector, ciudad), <strong>INVENTARIO</strong> (id_producto PK, id_emprendimiento FK, nombre_producto, stock_actual, punto_reorden), <strong>TRANSACCION</strong> (id_transaccion PK, id_emprendimiento FK, monto, tipo, fecha_transaccion, descripcion) y <strong>PROSPECTO_CLIENTE</strong> (id_prospecto PK, nombre, correo_electronico, fecha_registro). Un EMPRENDIMIENTO posee (1..*) registros de INVENTARIO y registra (1..*) registros de TRANSACCION.</p>
+
+      <figure class="doc-figura">
+        <img class="doc-img" src="img/basededatos.png" alt="Diagrama Entidad-Relación Lógico con las tablas del sistema">
+        <figcaption>Figura 5: Diagrama Entidad-Relación (DER) Lógico — Tablas EMPRENDIMIENTO, INVENTARIO, TRANSACCION, PROSPECTO_CLIENTE.</figcaption>
+      </figure>
+
+      <h5>3.2.4 Diccionario de Datos del Sistema</h5>
+
+      <p><strong>Tabla: TRANSACCION</strong></p>
+      <table class="tabla-doc">
+        <thead>
+          <tr><th>Campo</th><th>Tipo</th><th>Llave</th><th>Restricción</th><th>Descripción</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>id_transaccion</td><td>INT</td><td>PK</td><td>AUTO_INCREMENT, NOT NULL</td><td>Identificador único de transacción.</td></tr>
+          <tr><td>id_emprendimiento</td><td>INT</td><td>FK</td><td>NOT NULL</td><td>Vínculo relacional con la tabla EMPRENDIMIENTO.</td></tr>
+          <tr><td>monto</td><td>DECIMAL(10,2)</td><td>—</td><td>NOT NULL</td><td>Valor monetario de la operación financiera.</td></tr>
+          <tr><td>tipo</td><td>ENUM('INGRESO','EGRESO')</td><td>—</td><td>NOT NULL</td><td>Determina la naturaleza del flujo financiero del negocio.</td></tr>
+          <tr><td>fecha_transaccion</td><td>DATETIME</td><td>—</td><td>NOT NULL</td><td>Sello de fecha y hora exacta de ejecución del movimiento.</td></tr>
+          <tr><td>descripcion</td><td>TEXT</td><td>—</td><td>NULL</td><td>Detalle opcional sobre el origen del ingreso o egreso.</td></tr>
+        </tbody>
+      </table>
+
+      <p><strong>Tabla: PROSPECTO_CLIENTE</strong></p>
+      <table class="tabla-doc">
+        <thead>
+          <tr><th>Campo</th><th>Tipo</th><th>Llave</th><th>Restricción</th><th>Descripción</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>id_prospecto</td><td>INT</td><td>PK</td><td>AUTO_INCREMENT, NOT NULL</td><td>Identificador único del lead interesado capturado.</td></tr>
+          <tr><td>nombre</td><td>VARCHAR(100)</td><td>—</td><td>NOT NULL</td><td>Nombre completo del microempresario registrado.</td></tr>
+          <tr><td>correo_electronico</td><td>VARCHAR(150)</td><td>—</td><td>UNIQUE, NOT NULL</td><td>Email de contacto validado desde la interfaz web.</td></tr>
+          <tr><td>fecha_registro</td><td>TIMESTAMP</td><td>—</td><td>DEFAULT CURRENT_TIMESTAMP</td><td>Fecha en la que el lead fue capturado.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── 3.3 Arquitectura y Diseño UX ── -->
+    <div class="cap-sec">
+      <h4>3.3 Arquitectura de Software y Diseño de Interfaces de Usuario (UX)</h4>
+
+      <h5>3.3.1 Diagrama de Arquitectura Lógica en Capas</h5>
+      <ol>
+        <li><strong>Capa de Presentación (Frontend):</strong> desarrollada en HTML5, CSS3 y JavaScript moderno, encargada de la renderización del Dashboard e interfaces. Se representa de forma inicial a través de la Landing Page de captura.</li>
+        <li><strong>Capa de Lógica de Negocio (Backend):</strong> servidor que procesa las peticiones lógicas, ejecuta las reglas de negocio, valida los datos y conecta directamente con el motor analítico de Inteligencia Artificial.</li>
+        <li><strong>Capa de Datos (Persistencia):</strong> motor de base de datos relacional donde residen de forma íntegra las tablas normalizadas mapeadas en el DER.</li>
+      </ol>
+
+      <h5>3.3.2 Correspondencia de Campos y Trazabilidad (Formulario UI vs. Atributos DER)</h5>
+      <p>Para garantizar la trazabilidad de la información, el formulario de suscripción de la Landing Page conecta de manera unívoca sus campos de entrada con los atributos del DER:</p>
+      <ul class="lista-definiciones">
+        <li><strong>Campo de Texto UI:</strong> "Nombre Completo del Emprendedor" → mapea a <code>PROSPECTO_CLIENTE.nombre</code> (VARCHAR).</li>
+        <li><strong>Campo de Entrada UI:</strong> "Correo Electrónico de Contacto" → mapea a <code>PROSPECTO_CLIENTE.correo_electronico</code> (VARCHAR).</li>
+        <li><strong>Acción del Botón UI:</strong> "Solicitar Demostración de IA" → desencadena la instrucción <code>INSERT INTO PROSPECTO_CLIENTE</code> en la Capa de Datos.</li>
+      </ul>
+    </div>
+
+    <!-- ── Enlaces del Proyecto ── -->
+    <div class="cap-sec enlaces-proyecto">
+      <h4>Enlaces del Proyecto</h4>
+      <p>📁 Repositorio de GitHub:
+        <a href="https://github.com/eatedannerfidelcondorica-ai/LandingPageEmprenD.git" target="_blank">
+          github.com/eatedannerfidelcondorica-ai/emprende-proyecto-sistemas
+        </a>
+      </p>
+      <p>🌐 Landing Page en Producción:
+        <a href="https://eatedannerfidelcondorica-ai.github.io/LandingPageEmprenD/" target="_blank">
+          eatedannerfidelcondorica-ai.github.io/emprende-proyecto-sistemas
+        </a>
+      </p>
+    </div>
+
+  </div>
+</div>
+      <!-- ===================== MATRIZ RTM (CAPÍTULO 4) ===================== -->
+      <div id="cap4" class="cap-vista">
+        <div class="cap-numero-big">RTM</div>
+        <h2>Matriz de Trazabilidad de Requisitos Ajustada</h2>
+        <p class="cap-intro">Relación completa entre objetivos específicos, requisitos funcionales, casos de uso, entidades del DER y componentes de formulario.</p>
+
+        <div class="cap-secciones">
+          <div class="cap-sec">
+            <table class="tabla-doc tabla-rtm">
+              <thead>
+                <tr><th>Objetivo Específico</th><th>RF</th><th>Caso de Uso (UML)</th><th>Entidad DER</th><th>Componente Formulario</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Obj. Específico 1</td><td>RF-01</td><td>CU-01: Registrar Transacción</td><td>Transaccion</td><td>Formulario Transacciones (Monto, Tipo)</td></tr>
+                <tr><td>Obj. Específico 2</td><td>RF-02</td><td>CU-02: Generar Predicción IA</td><td>Prediccion / IA_Model</td><td>Botón "Optimizar con IA"</td></tr>
+                <tr><td>Obj. Específico 3</td><td>RF-03</td><td>CU-03: Visualizar Dashboard</td><td>Transaccion / Reporte</td><td>Dashboard / Canvas Gráfico</td></tr>
+                <tr><td>Obj. Específico 3</td><td>RF-04</td><td>CU-04: Monitorear Alertas</td><td>Inventario</td><td>Panel de Alertas de Stock</td></tr>
+                <tr><td>Obj. Específico 4</td><td>RF-05</td><td>CU-05: Capturar Interesado</td><td>Prospecto_Cliente</td><td>Formulario Landing Page (Email, Nombre)</td></tr>
+              </tbody>
+            </table>
+
+            <h5>Matriz MoSCoW Asociada</h5>
+            <table class="tabla-doc">
+              <thead><tr><th>Categoría</th><th>Requisitos</th></tr></thead>
+              <tbody>
+                <tr><td>Must Have</td><td>RF-01, RF-05, RNF-01</td></tr>
+                <tr><td>Should Have</td><td>RF-02, RF-03</td></tr>
+                <tr><td>Could Have</td><td>RF-04</td></tr>
+                <tr><td>Won't Have</td><td>Integración con pasarelas de pago bancarias locales</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

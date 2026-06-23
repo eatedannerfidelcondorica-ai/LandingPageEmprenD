@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EmprenD  · Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="dashboard-page">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">EmprenD <span></span></div>
+    <nav class="sidebar-nav">
+      <a href="#" class="snav active" onclick="verSeccion('usuarios', this)">👥 Usuarios</a>
+      <a href="#" class="snav" onclick="verSeccion('emprendimientos', this)">🏪 Emprendimientos</a>
+      <a href="#" class="snav" onclick="verSeccion('ventas', this)">💰 Ventas Globales</a>
+      <a href="#" class="snav" onclick="verSeccion('reportes', this)">📊 Reportes IA</a>
+      <a href="#" class="snav" onclick="verSeccion('documentos', this)">📄 Documentos</a>
+      <a href="#" class="snav" onclick="verSeccion('configuracion', this)">⚙️ Configuración</a>
+    </nav>
+    <div class="sidebar-admin-info">
+      <div class="admin-avatar-mini" id="adminAvatarMini">
+        <img id="adminFotoMini" src="" alt="Admin" style="display:none; width:40px; height:40px; border-radius:50%; object-fit:cover; border:2px solid #f5a623;">
+        <span id="adminIconoMini" style="font-size:28px;">👑</span>
+      </div>
+      <div class="admin-texto-mini">
+        <span id="adminNombreMini">Administrador</span>
+        <span id="adminCorreoMini" style="font-size:11px; opacity:0.7;"></span>
+      </div>
+    </div>
+    <button class="btn-cerrar" onclick="cerrarSesion()">🚪 Cerrar Sesión</button>
+  </aside>
+
+  <main class="dashboard-main">
+    <div class="dash-header">
+      <div>
+        <h1 id="seccionTitulo">Panel Administrador</h1>
+        <p id="seccionSub">Gestión general del sistema EmprenD IA</p>
+      </div>
+      <div class="user-badge">
+        <img id="adminFotoHeader" src="" alt="" style="display:none; width:32px; height:32px; border-radius:50%; object-fit:cover; margin-right:8px; border:2px solid #f5a623; vertical-align:middle;">
+        <span id="adminIconoHeader">👑</span> Administrador
+      </div>
+    </div>
+
+    <!-- ===================== USUARIOS ===================== -->
+    <div id="sec-usuarios" class="seccion activo">
+      <div class="kpi-grid">
+        <div class="kpi-card azul">
+          <span class="kpi-num" id="totalUsuarios">—</span>
+          <span class="kpi-lab">Total Usuarios</span>
+        </div>
+        <div class="kpi-card verde">
+          <span class="kpi-num" id="totalEmprendedores">—</span>
+          <span class="kpi-lab">Emprendedores</span>
+        </div>
+        <div class="kpi-card amarillo">
+          <span class="kpi-num" id="totalCompradores">—</span>
+          <span class="kpi-lab">Compradores</span>
+        </div>
+      </div>
+      <div class="tabla-card">
+        <h3>Lista de Usuarios</h3>
+        <table class="tabla">
+          <thead>
+            <tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Estado</th><th>Registro</th></tr>
+          </thead>
+          <tbody id="tablaUsuarios"><tr><td colspan="5" class="cargando">Cargando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===================== EMPRENDIMIENTOS ===================== -->
+    <div id="sec-emprendimientos" class="seccion">
+      <div class="tabla-card">
+        <div class="tabla-card-header">
+          <h3>Emprendimientos Registrados</h3>
+        </div>
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Negocio</th>
+              <th>Propietario</th>
+              <th>Categoría</th>
+              <th>Posible Infracción</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tablaEmprendimientos"><tr><td colspan="6" class="cargando">Cargando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===================== VENTAS GLOBALES ===================== -->
+    <div id="sec-ventas" class="seccion">
+
+      <!-- KPIs de ventas -->
+      <div class="kpi-grid">
+        <div class="kpi-card azul">
+          <span class="kpi-num" id="ventasHoy">—</span>
+          <span class="kpi-lab">Ventas Hoy</span>
+        </div>
+        <div class="kpi-card verde">
+          <span class="kpi-num" id="totalVentasHoy">Bs. —</span>
+          <span class="kpi-lab">Monto Total Hoy</span>
+        </div>
+        <div class="kpi-card amarillo">
+          <span class="kpi-num" id="ventasMes">—</span>
+          <span class="kpi-lab">Ventas Este Mes</span>
+        </div>
+        <div class="kpi-card rojo">
+          <span class="kpi-num" id="totalVentasMes">Bs. —</span>
+          <span class="kpi-lab">Monto Total Mes</span>
+        </div>
+      </div>
+
+      <!-- Botones de exportación -->
+      <div class="export-bar">
+        <button class="btn-export pdf" onclick="exportarPDF()">📄 Exportar PDF</button>
+        <button class="btn-export excel" onclick="exportarExcel()">📊 Exportar Excel</button>
+        <span class="export-info" id="exportFechaHora"></span>
+      </div>
+
+      <!-- Ventas por día -->
+      <div class="tabla-card">
+        <h3>📅 Ventas por Día</h3>
+        <table class="tabla" id="tablaVentasDia">
+          <thead>
+            <tr><th>Fecha</th><th>N° Ventas</th><th>Monto Total (Bs.)</th><th>Última actualización</th></tr>
+          </thead>
+          <tbody id="cuerpoVentasDia"><tr><td colspan="4" class="cargando">Cargando...</td></tr></tbody>
+        </table>
+      </div>
+
+      <!-- Ventas por mes -->
+      <div class="tabla-card">
+        <h3>📆 Ventas por Mes</h3>
+        <table class="tabla" id="tablaVentasMes">
+          <thead>
+            <tr><th>Mes</th><th>Año</th><th>N° Ventas</th><th>Monto Total (Bs.)</th></tr>
+          </thead>
+          <tbody id="cuerpoVentasMes"><tr><td colspan="4" class="cargando">Cargando...</td></tr></tbody>
+        </table>
+      </div>
+
+      <!-- Facturación anual histórica -->
+      <div class="tabla-card">
+        <h3>📈 Facturación Anual Histórica</h3>
+        <table class="tabla" id="tablaVentasAnual">
+          <thead>
+            <tr><th>Año</th><th>N° Ventas</th><th>Monto Total (Bs.)</th></tr>
+          </thead>
+          <tbody id="cuerpoVentasAnual"><tr><td colspan="3" class="cargando">Cargando...</td></tr></tbody>
+        </table>
+      </div>
+
+      <!-- Gráfico torta IA -->
+      <div class="tabla-card">
+        <h3>🤖 Análisis IA · Ventas Globales</h3>
+        <div class="ia-ventas-grid">
+          <div class="chart-container">
+            <canvas id="chartVentasTorta" width="300" height="300"></canvas>
+          </div>
+          <div class="ia-analisis-box" id="iaAnalisisVentas">
+            <div class="ia-loading">🤖 Analizando datos de ventas con IA...</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===================== REPORTES IA ===================== -->
+    <div id="sec-reportes" class="seccion">
+      <div class="tabla-card">
+        <h3>Reportes Generados por IA</h3>
+        <table class="tabla">
+          <thead>
+            <tr><th>Emprendimiento</th><th>Título</th><th>Resultado</th><th>Fecha</th></tr>
+          </thead>
+          <tbody id="tablaReportes"><tr><td colspan="4" class="cargando">Cargando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===================== DOCUMENTOS ===================== -->
+    <div id="sec-documentos" class="seccion">
+      <div class="tabla-card">
+        <h3>Documentos del Proyecto</h3>
+        <table class="tabla">
+          <thead>
+            <tr><th>Capítulo</th><th>Título</th><th>Descripción</th><th>Fecha</th></tr>
+          </thead>
+          <tbody id="tablaDocumentos"><tr><td colspan="4" class="cargando">Cargando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===================== CONFIGURACIÓN ===================== -->
+    <div id="sec-configuracion" class="seccion">
+      <div class="config-grid">
+
+        <!-- Foto de perfil -->
+        <div class="config-card">
+          <h3>🖼️ Foto de Perfil</h3>
+          <div class="foto-perfil-container">
+            <div class="foto-preview-wrap">
+              <img id="fotoPreview" src="" alt="Foto de perfil" style="display:none; width:120px; height:120px; border-radius:50%; object-fit:cover; border:3px solid #f5a623;">
+              <div id="fotoPlaceholder" style="width:120px; height:120px; border-radius:50%; background:#1e2a4a; display:flex; align-items:center; justify-content:center; font-size:50px; border:3px solid #f5a623;">👑</div>
+            </div>
+            <label class="btn-upload" for="inputFoto">📁 Seleccionar imagen (JPG, PNG, WEBP)</label>
+            <input type="file" id="inputFoto" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;" onchange="previsualizarFoto(event)">
+            <button class="btn-guardar-foto" onclick="guardarFotoPerfil()">💾 Guardar Foto</button>
+            <p class="config-hint">La foto aparecerá en la barra lateral y en el header del panel.</p>
+          </div>
+        </div>
+
+        <!-- Cambio de contraseña -->
+        <div class="config-card">
+          <h3>🔒 Cambio de Contraseña</h3>
+          <div class="config-form">
+            <label>Nueva Contraseña</label>
+            <input type="password" id="nuevaPassword" placeholder="Mínimo 6 caracteres" class="config-input">
+            <label>Confirmar Contraseña</label>
+            <input type="password" id="confirmarPassword" placeholder="Repetir contraseña" class="config-input">
+            <button class="btn-config-accion" onclick="cambiarPassword()">🔑 Cambiar Contraseña</button>
+            <p id="msgPassword" class="config-msg"></p>
+          </div>
+        </div>
+
+        <!-- Cambio de correo -->
+        <div class="config-card">
+          <h3>✉️ Cambio de Correo Electrónico</h3>
+          <div class="config-form">
+            <label>Nuevo Correo Electrónico</label>
+            <input type="email" id="nuevoCorreo" placeholder="nuevo@correo.com" class="config-input">
+            <button class="btn-config-accion" onclick="cambiarCorreo()">📧 Cambiar Correo</button>
+            <p id="msgCorreo" class="config-msg"></p>
+            <p class="config-hint">Se enviará un enlace de verificación al nuevo correo.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Modal ver acciones de emprendimiento -->
+  <div id="modalAcciones" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modalEmpNombre">Acciones del Negocio</h3>
+        <button class="modal-close" onclick="cerrarModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <h4>🛍️ Productos a la venta</h4>
+        <div id="modalProductos" class="modal-lista">Cargando...</div>
+        <h4 style="margin-top:16px;">🤖 Análisis de Infracciones (IA)</h4>
+        <div id="modalIAAnalisis" class="ia-modal-box">Analizando con IA...</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-suspender" id="btnSuspender" onclick="cambiarEstadoEmprendimiento()">⛔ Suspender</button>
+        <button class="btn-activar" id="btnActivar" onclick="cambiarEstadoEmprendimiento()" style="display:none;">✅ Activar</button>
+        <button class="btn-secundario" onclick="cerrarModal()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts externos -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

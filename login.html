@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EmprenD  · Acceso</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="login-page">
+
+  <div class="login-split">
+
+    <!-- LADO IZQUIERDO -->
+    <div class="login-left">
+      <div class="login-brand">EmprenD <span>D</span></div>
+      <h2>Bienvenido de vuelta</h2>
+      <p>Gestiona tu emprendimiento </p>
+      <div class="roles-info">
+        <div class="rol-chip">👑 Administrador</div>
+        <div class="rol-chip">🏪 Emprendedor</div>
+        <div class="rol-chip">🛒 Comprador</div>
+      </div>
+    </div>
+
+    <!-- LADO DERECHO -->
+    <div class="login-right">
+
+      <!-- TABS -->
+      <div class="login-tabs">
+        <button class="ltab active" onclick="switchTab('ingresar', this)">Iniciar Sesión</button>
+        <button class="ltab" onclick="switchTab('registrar', this)">Crear Cuenta</button>
+      </div>
+
+      <!-- INICIAR SESIÓN -->
+      <div id="tab-ingresar" class="ltab-content activo">
+        <div class="input-group">
+          <label>Correo Electrónico</label>
+          <input type="email" id="loginCorreo" placeholder="correo@ejemplo.com">
+        </div>
+        <div class="input-group">
+          <label>Contraseña</label>
+          <input type="password" id="loginPass" placeholder="••••••••">
+        </div>
+        <div class="input-group">
+          <label>Entrar como</label>
+          <select id="loginRol">
+            <option value="ADMINISTRADOR">Administrador</option>
+            <option value="EMPRENDEDOR">Emprendedor</option>
+            <option value="COMPRADOR">🛒 Comprador</option>
+          </select>
+        </div>
+        <button class="btn-amarillo full" onclick="iniciarSesion()">Iniciar Sesión</button>
+        <p id="loginMsg" class="msg"></p>
+      </div>
+
+      <!-- CREAR CUENTA -->
+      <div id="tab-registrar" class="ltab-content">
+        <div class="input-group">
+          <label>Nombre</label>
+          <input type="text" id="regNombre" placeholder="Tu nombre">
+        </div>
+        <div class="input-group">
+          <label>Apellido</label>
+          <input type="text" id="regApellido" placeholder="Tu apellido">
+        </div>
+        <div class="input-group">
+          <label>Correo Electrónico</label>
+          <input type="email" id="regCorreo" placeholder="correo@ejemplo.com">
+        </div>
+        <div class="input-group">
+          <label>Contraseña</label>
+          <input type="password" id="regPass" placeholder="Mínimo 6 caracteres">
+        </div>
+        <div class="input-group">
+          <label>Registrarse como</label>
+          <select id="regRol">
+            <option value="EMPRENDEDOR">Emprendedor</option>
+            <option value="COMPRADOR">🛒 Comprador</option>
+          </select>
+        </div>
+        <button class="btn-amarillo full" onclick="crearCuenta()">Crear Cuenta</button>
+        <p id="regMsg" class="msg"></p>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EmprenD  · Emprendedor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="dashboard-page">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">EmprenD <span></span></div>
+    <nav class="sidebar-nav">
+      <a href="#" class="snav active" onclick="verSeccion('resumen', this)">📊 Resumen</a>
+      <a href="#" class="snav" onclick="verSeccion('productos', this)">🛍️ Gestionar Productos</a>
+      <a href="#" class="snav" onclick="verSeccion('ordenes', this)">📋 Estado de Órdenes</a>
+      <a href="#" class="snav" onclick="verSeccion('compradores', this)">👥 Perfiles de Compradores</a>
+      <a href="#" class="snav" onclick="verSeccion('pagos', this)">💳 Métodos de Pago</a>
+      <a href="#" class="snav" onclick="verSeccion('inventario', this)">🗃️ Inventario</a>
+      <a href="#" class="snav" onclick="verSeccion('transacciones', this)">💰 Transacciones</a>
+      <a href="#" class="snav" onclick="verSeccion('alertas', this)">🔔 Alertas</a>
+      <a href="#" class="snav" onclick="verSeccion('predicciones', this)">🤖 Predicciones IA</a>
+      <a href="#" class="snav" onclick="verSeccion('ia-ventas', this)">📈 Análisis IA Ventas</a>
+      <a href="#" class="snav" onclick="verSeccion('normas', this)">📜 Normas del Sistema</a>
+      <a href="#" class="snav" onclick="verSeccion('configuracion', this)">⚙️ Configuración de Perfil</a>
+    </nav>
+    <button class="btn-cerrar" onclick="cerrarSesion()">🚪 Cerrar Sesión</button>
+  </aside>
+
+  <main class="dashboard-main">
+    <div class="dash-header">
+      <div>
+        <h1 id="seccionTitulo">Mi Emprendimiento</h1>
+        <p id="seccionSub" class="sub-nombre">Cargando datos...</p>
+      </div>
+      <div class="user-badge">🏪 Emprendedor</div>
+    </div>
+
+    <!-- ===================== RESUMEN ===================== -->
+    <div id="sec-resumen" class="seccion activo">
+      <div class="bienvenida-banner">
+        <div class="bienvenida-texto">
+          <h2 id="bienvenidaNombre">👋 Bienvenido, Emprendedor</h2>
+          <p id="bienvenidaNegocio">🏪 Cargando tu negocio...</p>
+          <p id="bienvenidaFecha" class="bienvenida-fecha"></p>
+        </div>
+        <div class="bienvenida-vistas">
+          <div class="vista-badge">
+            <span class="vista-num" id="visitasHoy">—</span>
+            <span class="vista-lab">👁️ Personas vieron tus productos hoy</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card azul">
+          <span class="kpi-num" id="kpiIngresos">Bs. —</span>
+          <span class="kpi-lab">Total Ingresos</span>
+        </div>
+        <div class="kpi-card rojo">
+          <span class="kpi-num" id="kpiEgresos">Bs. —</span>
+          <span class="kpi-lab">Total Egresos</span>
+        </div>
+        <div class="kpi-card verde">
+          <span class="kpi-num" id="kpiGanancia">Bs. —</span>
+          <span class="kpi-lab">Ganancia Neta</span>
+        </div>
+        <div class="kpi-card amarillo">
+          <span class="kpi-num" id="kpiProductos">—</span>
+          <span class="kpi-lab">Productos Activos</span>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card azul-oscuro">
+          <span class="kpi-num" id="ventasDia">Bs. —</span>
+          <span class="kpi-lab">💰 Ventas Hoy</span>
+        </div>
+        <div class="kpi-card azul-oscuro">
+          <span class="kpi-num" id="ventasMes">Bs. —</span>
+          <span class="kpi-lab">📆 Ventas Este Mes</span>
+        </div>
+        <div class="kpi-card azul-oscuro">
+          <span class="kpi-num" id="ventasAnio">Bs. —</span>
+          <span class="kpi-lab">📈 Ventas Este Año</span>
+        </div>
+        <div class="kpi-card azul-oscuro">
+          <span class="kpi-num" id="totalClientes">—</span>
+          <span class="kpi-lab">👤 Clientes Totales</span>
+        </div>
+      </div>
+
+      <div class="tabla-card">
+        <h3>🔔 Alertas Recientes</h3>
+        <div id="alertasResumen" class="alertas-lista">Cargando...</div>
+      </div>
+    </div>
+
+    <!-- ===================== GESTIONAR PRODUCTOS ===================== -->
+    <div id="sec-productos" class="seccion">
+      <div class="tabla-card">
+        <div class="tabla-header">
+          <h3>🛍️ Catálogo de Productos</h3>
+          <button class="btn-amarillo sm" onclick="toggleFormProducto()">+ Agregar Producto</button>
+        </div>
+        <div id="formProducto" class="form-producto oculto">
+          <div class="form-producto-grid">
+            <div class="form-foto-col">
+              <label class="foto-drop-label" for="prodFoto">
+                <div id="prodFotoPreview" class="foto-drop-placeholder">
+                  <span>📷</span>
+                  <p>Seleccionar foto<br><small>JPG, PNG, WEBP, GIF</small></p>
+                </div>
+              </label>
+              <input type="file" id="prodFoto" accept="image/*" style="display:none;" onchange="previsualizarFotoProducto(event)">
+            </div>
+            <div class="form-datos-col">
+              <input type="text" id="prodNombre" placeholder="Nombre del producto" class="config-input">
+              <input type="text" id="prodDesc" placeholder="Descripción del producto" class="config-input">
+              <select id="prodCategoria" class="config-input">
+                <option value="">— Seleccionar Categoría —</option>
+                <option value="Ropa">👗 Ropa</option>
+                <option value="Tecnología">💻 Tecnología</option>
+                <option value="Alimentos">🍔 Alimentos</option>
+                <option value="Calzado">👟 Calzado</option>
+                <option value="Accesorios">💍 Accesorios</option>
+                <option value="Hogar">🏠 Hogar</option>
+                <option value="Belleza">💄 Belleza</option>
+                <option value="Deportes">⚽ Deportes</option>
+                <option value="Otros">📦 Otros</option>
+              </select>
+              <input type="number" id="prodPrecio" placeholder="Precio (Bs.)" class="config-input">
+              <input type="number" id="prodStock" placeholder="Stock inicial" class="config-input">
+              <div class="form-btns">
+                <button class="btn-azul" onclick="agregarProducto()">💾 Guardar Producto</button>
+                <button class="btn-secundario" onclick="toggleFormProducto()">Cancelar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="catalogoProductos" class="catalogo-grid">
+          <div class="cargando">Cargando productos...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== ESTADO DE ÓRDENES ===================== -->
+    <div id="sec-ordenes" class="seccion">
+      <div class="tabla-card">
+        <h3>📋 Auditoría y Flujo de Órdenes</h3>
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>ID Orden</th>
+              <th>Comprador</th>
+              <th>Productos</th>
+              <th>Unidades</th>
+              <th>Total (Bs.)</th>
+              <th>Estado Envío</th>
+              <th>Método Entrega</th>
+              <th>Lugar / Detalle</th>
+              <th>Fecha Entrega</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="cuerpoOrdenes"><tr><td colspan="10" class="cargando">Cargando órdenes...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===================== PERFILES DE COMPRADORES ===================== -->
+    <div id="sec-compradores" class="seccion">
+      <div class="tabla-card">
+        <h3>👥 Perfiles de Compradores</h3>
+        <div id="gridCompradores" class="compradores-grid">
+          <div class="cargando">Cargando compradores...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== MÉTODOS DE PAGO ===================== -->
+    <div id="sec-pagos" class="seccion">
+      <div class="config-grid">
+        <div class="config-card">
+          <h3>📲 Códigos QR de Pago</h3>
+          <p class="config-hint">Sube tus imágenes QR. El comprador verá estas opciones al pagar.</p>
+          <div id="listaQRs" class="qr-lista">
+            <div class="cargando">Cargando QRs...</div>
+          </div>
+          <div class="qr-agregar">
+            <label class="btn-upload" for="inputQR">📷 Agregar QR (JPG, PNG)</label>
+            <input type="file" id="inputQR" accept="image/*" style="display:none;" onchange="agregarQR(event)">
+          </div>
+        </div>
+        <div class="config-card">
+          <h3>💵 Pago en Efectivo</h3>
+          <p class="config-hint">Activa esta opción si también aceptas pagos en efectivo.</p>
+          <div class="efectivo-toggle-wrap">
+            <label class="switch-label">
+              <span>Aceptar efectivo</span>
+              <input type="checkbox" id="toggleEfectivo" onchange="guardarMetodoPago()">
+              <span class="slider-toggle"></span>
+            </label>
+          </div>
+        </div>
+        <div class="config-card" style="grid-column: 1 / -1;">
+          <h3>📍 Lugares y Métodos de Entrega</h3>
+          <p class="config-hint">Define cómo y dónde entregas. El comprador verá estas opciones al confirmar su pedido.</p>
+          <div id="listaEntregas" class="entregas-lista">
+            <div class="cargando">Cargando...</div>
+          </div>
+          <div class="entrega-form">
+            <select id="tipoEntrega" class="config-input" style="max-width:200px;">
+              <option value="Físico">🤝 Entrega Física</option>
+              <option value="InDrive">🚗 InDrive / Delivery</option>
+              <option value="Envío">📦 Envío por Paquetería</option>
+              <option value="Otros">📋 Otro</option>
+            </select>
+            <input type="text" id="lugarEntrega" placeholder="Ej: Plaza central, Zona Sur..." class="config-input" style="flex:1;">
+            <button class="btn-azul" onclick="agregarLugarEntrega()">+ Agregar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== INVENTARIO ===================== -->
+    <div id="sec-inventario" class="seccion">
+      <div class="tabla-card">
+        <h3>🗃️ Inventario</h3>
+        <table class="tabla">
+          <thead>
+            <tr><th>Producto</th><th>Stock Actual</th><th>Stock Mínimo</th><th>Stock Máximo</th><th>Actualizado</th></tr>
+          </thead>
+          <tbody id="tablaInventario"><tr><td colspan="5" class="cargando">Cargando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===================== TRANSACCIONES ===================== -->
+    <div id="sec-transacciones" class="seccion">
+      <div class="tabla-card">
+        <div class="tabla-header">
+          <h3>💰 Transacciones</h3>
+          <button class="btn-amarillo sm" onclick="toggleFormTrans()">+ Nueva</button>
+        </div>
+        <div id="formTrans" class="form-inline oculto">
+          <input type="number" id="transMonto" placeholder="Monto (Bs.)">
+          <select id="transTipo">
+            <option value="INGRESO">Ingreso</option>
+            <option value="EGRESO">Egreso</option>
+          </select>
+          <input type="text" id="transDesc" placeholder="Descripción">
+          <button class="btn-azul" onclick="agregarTransaccion()">Guardar</button>
+        </div>
+        <table class="tabla">
+          <thead>
+            <tr><th>Tipo</th><th>Monto</th><th>Descripción</th><th>Fecha</th></tr>
+          </thead>
+          <tbody id="tablaTransacciones"><tr><td colspan="4" class="cargando">Cargando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===================== ALERTAS ===================== -->
+    <div id="sec-alertas" class="seccion">
+      <div class="tabla-card">
+        <h3>🔔 Alertas del Sistema</h3>
+        <table class="tabla">
+          <thead>
+            <tr><th>Producto</th><th>Tipo</th><th>Mensaje</th><th>Estado</th><th>Fecha</th></tr>
+          </thead>
+          <tbody id="tablaAlertas"><tr><td colspan="5" class="cargando">Cargando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===================== PREDICCIONES IA ===================== -->
+    <div id="sec-predicciones" class="seccion">
+      <div class="tabla-card">
+        <h3>🤖 Predicciones de Inteligencia Artificial</h3>
+        <table class="tabla">
+          <thead>
+            <tr><th>Producto</th><th>Ventas Estimadas</th><th>Stock Recomendado</th><th>Confianza</th><th>Fecha</th></tr>
+          </thead>
+          <tbody id="tablaPredicciones"><tr><td colspan="5" class="cargando">Cargando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===================== ANÁLISIS IA VENTAS ===================== -->
+    <div id="sec-ia-ventas" class="seccion">
+      <div class="tabla-card">
+        <h3>📈 Análisis Inteligente de Ventas</h3>
+        <p class="config-hint">La IA analiza tus ventas por día, mes y año para darte recomendaciones en tiempo real.</p>
+        <div class="ia-ventas-grid">
+          <div class="ia-grafico-wrap">
+            <h4>Ventas por Día (últimos 7 días)</h4>
+            <canvas id="chartVentasDia" width="400" height="220"></canvas>
+          </div>
+          <div class="ia-grafico-wrap">
+            <h4>Ventas por Mes (este año)</h4>
+            <canvas id="chartVentasMes" width="400" height="220"></canvas>
+          </div>
+        </div>
+        <div class="ia-analisis-box" id="iaAnalisisEmprendedor">
+          <div class="ia-loading">🤖 Conectando con IA para analizar tus ventas...</div>
+        </div>
+        <button class="btn-azul" style="margin-top:16px;" onclick="analizarVentasIA()">🔄 Actualizar Análisis IA</button>
+      </div>
+    </div>
+
+    <!-- ===================== NORMAS DEL SISTEMA ===================== -->
+    <div id="sec-normas" class="seccion">
+      <div class="tabla-card">
+        <h3>📜 Normas del Sistema EmprenD IA</h3>
+        <p class="config-hint">Como emprendedor registrado debes cumplir estas normas. La IA monitorea tu actividad automáticamente.</p>
+        <div class="normas-lista">
+          <div class="norma-item">
+            <span class="norma-num">1</span>
+            <div>
+              <strong>Información veraz</strong>
+              <p>Todos los productos publicados deben tener nombre, descripción, precio y fotos reales. Está prohibido publicar información falsa o engañosa.</p>
+            </div>
+          </div>
+          <div class="norma-item">
+            <span class="norma-num">2</span>
+            <div>
+              <strong>Productos permitidos</strong>
+              <p>Solo se pueden vender productos legales. Está completamente prohibida la venta de sustancias ilegales, productos falsificados, armas o cualquier artículo que infrinja la ley boliviana.</p>
+            </div>
+          </div>
+          <div class="norma-item">
+            <span class="norma-num">3</span>
+            <div>
+              <strong>Trato al comprador</strong>
+              <p>Debes tratar a los compradores con respeto. No se permite el acoso, insultos ni comunicación inapropiada dentro de la plataforma.</p>
+            </div>
+          </div>
+          <div class="norma-item">
+            <span class="norma-num">4</span>
+            <div>
+              <strong>Cumplimiento de órdenes</strong>
+              <p>Una vez aceptada una orden, tienes la obligación de entregarla en el tiempo y lugar acordado. El incumplimiento reiterado puede resultar en suspensión de cuenta.</p>
+            </div>
+          </div>
+          <div class="norma-item">
+            <span class="norma-num">5</span>
+            <div>
+              <strong>Precios justos</strong>
+              <p>Los precios publicados deben ser coherentes con el mercado. No se permite la especulación abusiva ni el cobro de precios distintos a los publicados.</p>
+            </div>
+          </div>
+          <div class="norma-item">
+            <span class="norma-num">6</span>
+            <div>
+              <strong>Stock actualizado</strong>
+              <p>Debes mantener tu inventario actualizado. Publicar productos sin stock disponible genera alertas automáticas en el sistema.</p>
+            </div>
+          </div>
+          <div class="norma-item">
+            <span class="norma-num">7</span>
+            <div>
+              <strong>Métodos de pago transparentes</strong>
+              <p>Solo puedes solicitar pagos a través de los métodos registrados en la plataforma (QR o efectivo). No se permite solicitar pagos por canales externos no verificados.</p>
+            </div>
+          </div>
+          <div class="norma-item norma-advertencia">
+            <span class="norma-num">⚠️</span>
+            <div>
+              <strong>Consecuencias por infracción</strong>
+              <p>El sistema de IA detecta automáticamente comportamientos sospechosos. En caso de infracción leve se emite una advertencia. Infracciones graves o reiteradas resultan en <strong>suspensión inmediata</strong> de la cuenta por el administrador.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== CONFIGURACIÓN DE PERFIL ===================== -->
+    <div id="sec-configuracion" class="seccion">
+      <div class="config-grid">
+
+        <!-- Foto de perfil -->
+        <div class="config-card">
+          <h3>🖼️ Foto de Perfil del Negocio</h3>
+          <div class="foto-perfil-container">
+            <div class="foto-preview-wrap">
+              <img id="fotoPreviewEmp" src="" alt="Foto" style="display:none; width:120px; height:120px; border-radius:50%; object-fit:cover; border:3px solid #f5a623;">
+              <div id="fotoPlaceholderEmp" style="width:120px; height:120px; border-radius:50%; background:#1e2a4a; display:flex; align-items:center; justify-content:center; font-size:50px; border:3px solid #f5a623;">🏪</div>
+            </div>
+            <label class="btn-upload" for="inputFotoEmp">📁 Seleccionar imagen</label>
+            <input type="file" id="inputFotoEmp" accept="image/*" style="display:none;" onchange="previsualizarFotoEmp(event)">
+            <button class="btn-guardar-foto" onclick="guardarFotoEmprendedor()">💾 Guardar Foto</button>
+          </div>
+        </div>
+
+        <!-- Datos del negocio -->
+        <div class="config-card">
+          <h3>🏪 Datos del Negocio</h3>
+          <div class="config-form">
+            <label>Nombre del Microemprendimiento</label>
+            <input type="text" id="confNombreNegocio" placeholder="Ej: Mi Tienda Boliviana" class="config-input">
+            <label>Categoría del Negocio</label>
+            <select id="confCategoriaNegocio" class="config-input">
+              <option value="">— Seleccionar —</option>
+              <option value="Ropa">👗 Ropa y Moda</option>
+              <option value="Tecnología">💻 Tecnología</option>
+              <option value="Alimentos">🍔 Alimentos y Bebidas</option>
+              <option value="Calzado">👟 Calzado</option>
+              <option value="Accesorios">💍 Accesorios</option>
+              <option value="Hogar">🏠 Hogar y Decoración</option>
+              <option value="Belleza">💄 Belleza y Cuidado</option>
+              <option value="Deportes">⚽ Deportes</option>
+              <option value="Otros">📦 Otros</option>
+            </select>
+            <label>Número de Celular</label>
+            <input type="tel" id="confCelular" placeholder="Ej: 70000000" class="config-input">
+            <button class="btn-config-accion" onclick="guardarDatosNegocio()">💾 Guardar Datos</button>
+            <p id="msgDatosNegocio" class="config-msg"></p>
+          </div>
+        </div>
+
+        <!-- Restablecer credenciales -->
+        <div class="config-card" style="grid-column: 1 / -1;">
+          <h3>🔐 Restablecer Credenciales de Acceso</h3>
+          <div class="config-grid" style="grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="config-form">
+              <label>Nuevo Correo Electrónico</label>
+              <input type="email" id="confNuevoCorreo" placeholder="nuevo@correo.com" class="config-input">
+              <button class="btn-config-accion" onclick="cambiarCorreoEmp()">📧 Cambiar Correo</button>
+              <p id="msgCorreoEmp" class="config-msg"></p>
+              <p class="config-hint">Se enviará un enlace de verificación al nuevo correo.</p>
+            </div>
+            <div class="config-form">
+              <label>Nueva Contraseña</label>
+              <input type="password" id="confNuevaPass" placeholder="Mínimo 6 caracteres" class="config-input">
+              <label>Confirmar Contraseña</label>
+              <input type="password" id="confConfirmarPass" placeholder="Repetir contraseña" class="config-input">
+              <button class="btn-config-accion" onclick="cambiarPasswordEmp()">🔑 Cambiar Contraseña</button>
+              <p id="msgPassEmp" class="config-msg"></p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ===== MODAL EDITAR PRODUCTO ===== -->
+  <div id="modalEditarProducto" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>✏️ Editar Producto</h3>
+        <button class="modal-close" onclick="cerrarModalEditar()">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editProdId">
+        <label class="foto-drop-label" for="editProdFoto" style="display:block; text-align:center; margin-bottom:12px; cursor:pointer;">
+          <img id="editProdFotoPreview" src="" alt="Foto" style="max-width:120px; max-height:120px; border-radius:10px; display:none; margin:0 auto;">
+          <div id="editProdFotoPlaceholder" style="font-size:40px; text-align:center;">📷</div>
+          <small>Haz clic para cambiar foto</small>
+        </label>
+        <input type="file" id="editProdFoto" accept="image/*" style="display:none;" onchange="previsualizarFotoEditar(event)">
+        <input type="text" id="editProdNombre" placeholder="Nombre del producto" class="config-input">
+        <input type="text" id="editProdDesc" placeholder="Descripción" class="config-input">
+        <select id="editProdCategoria" class="config-input">
+          <option value="Ropa">👗 Ropa</option>
+          <option value="Tecnología">💻 Tecnología</option>
+          <option value="Alimentos">🍔 Alimentos</option>
+          <option value="Calzado">👟 Calzado</option>
+          <option value="Accesorios">💍 Accesorios</option>
+          <option value="Hogar">🏠 Hogar</option>
+          <option value="Belleza">💄 Belleza</option>
+          <option value="Deportes">⚽ Deportes</option>
+          <option value="Otros">📦 Otros</option>
+        </select>
+        <input type="number" id="editProdPrecio" placeholder="Precio (Bs.)" class="config-input">
+        <input type="number" id="editProdStock" placeholder="Stock" class="config-input">
+      </div>
+      <div class="modal-footer">
+        <button class="btn-azul" onclick="guardarEdicionProducto()">💾 Guardar Cambios</button>
+        <button class="btn-secundario" onclick="cerrarModalEditar()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL DETALLE ORDEN ===== -->
+  <div id="modalOrden" class="modal-overlay" style="display:none;">
+    <div class="modal-box modal-box-wide">
+      <div class="modal-header">
+        <h3>📋 Detalle de Orden <span id="modalOrdenId"></span></h3>
+        <button class="modal-close" onclick="cerrarModalOrden()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="orden-detalle-grid">
+          <div>
+            <h4>👤 Comprador</h4>
+            <p id="modalOrdenComprador">—</p>
+          </div>
+          <div>
+            <h4>📦 Productos</h4>
+            <div id="modalOrdenProductos">—</div>
+          </div>
+          <div>
+            <h4>💰 Total</h4>
+            <p id="modalOrdenTotal" style="font-size:1.4rem; font-weight:700; color:#f5a623;">—</p>
+          </div>
+          <div>
+            <h4>🚚 Estado de Envío</h4>
+            <select id="modalOrdenEstado" class="config-input">
+              <option value="en_espera">⏳ En Espera</option>
+              <option value="en_camino">🚗 En Camino</option>
+              <option value="completado">✅ Completado</option>
+              <option value="rechazado">❌ Rechazado</option>
+            </select>
+          </div>
+          <div>
+            <h4>📍 Método de Entrega</h4>
+            <select id="modalOrdenMetodo" class="config-input">
+              <option value="Físico">🤝 Entrega Física</option>
+              <option value="InDrive">🚗 InDrive / Delivery</option>
+              <option value="Envío">📦 Envío por Paquetería</option>
+            </select>
+          </div>
+          <div>
+            <h4>📌 Lugar de Entrega</h4>
+            <input type="text" id="modalOrdenLugar" placeholder="Ej: Plaza central..." class="config-input">
+          </div>
+          <div>
+            <h4>🗓️ Fecha y Hora de Entrega</h4>
+            <input type="datetime-local" id="modalOrdenFecha" class="config-input">
+          </div>
+          <div>
+            <h4>📝 Nota adicional</h4>
+            <textarea id="modalOrdenNota" class="config-input" rows="2" placeholder="Instrucciones adicionales..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-azul" onclick="guardarDetalleOrden()">💾 Guardar Cambios</button>
+        <button class="btn-secundario" onclick="cerrarModalOrden()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL HISTORIAL COMPRADOR ===== -->
+  <div id="modalComprador" class="modal-overlay" style="display:none;">
+    <div class="modal-box modal-box-wide">
+      <div class="modal-header">
+        <h3>🔍 Historial del Comprador</h3>
+        <button class="modal-close" onclick="cerrarModalComprador()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="comprador-perfil-header">
+          <img id="modalCompradorFoto" src="" alt="Foto" style="width:70px; height:70px; border-radius:50%; object-fit:cover; border:3px solid #f5a623; display:none;">
+          <div id="modalCompradorFotoIcon" style="width:70px; height:70px; border-radius:50%; background:#1e2a4a; display:flex; align-items:center; justify-content:center; font-size:36px; border:3px solid #f5a623;">👤</div>
+          <div>
+            <h3 id="modalCompradorNombre">—</h3>
+            <p id="modalCompradorId" style="font-size:12px; opacity:0.6;">ID: —</p>
+            <span id="modalCompradorEstado" class="badge-estado">—</span>
+          </div>
+        </div>
+        <div class="kpi-grid" style="margin: 16px 0;">
+          <div class="kpi-card azul" style="padding:12px;">
+            <span class="kpi-num" id="modalCompradorVisitas">—</span>
+            <span class="kpi-lab">Veces que ingresó</span>
+          </div>
+          <div class="kpi-card verde" style="padding:12px;">
+            <span class="kpi-num" id="modalCompradorCompras">—</span>
+            <span class="kpi-lab">Total Compras</span>
+          </div>
+          <div class="kpi-card amarillo" style="padding:12px;">
+            <span class="kpi-num" id="modalCompradorTotal">Bs. —</span>
+            <span class="kpi-lab">Monto Total Gastado</span>
+          </div>
+        </div>
+        <h4>📋 Historial de Compras</h4>
+        <table class="tabla">
+          <thead>
+            <tr><th>Fecha</th><th>Hora</th><th>Productos</th><th>Unidades</th><th>Total (Bs.)</th><th>Estado</th></tr>
+          </thead>
+          <tbody id="modalCompradorHistorial"><tr><td colspan="6" class="cargando">Cargando...</td></tr></tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secundario" onclick="cerrarModalComprador()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
