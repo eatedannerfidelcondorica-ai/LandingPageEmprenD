@@ -95,103 +95,84 @@ function formatMes(num) {
 }
 
 // ============================================================
-// LLAMADA A IA (Google Gemini API - ¡100% Gratuita!)
+// LLAMADA A IA
 // ============================================================
 async function llamarIA(prompt) {
-  // Tu API key gratuita de Google AI Studio
   const API_KEY = 'AQ.Ab8RN6LN8-krV-dN5WQP8Y7RkujUwSE7jmW3xC923pTnf1CW6A';
-  
-  // Endpoint oficial para el modelo Gemini 2.5 Flash
   const URL_API = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
-
-  // Estructura de la petición requerida por Google
   const payload = {
-    contents: [{
-      parts: [{
-        text: prompt
-      }]
-    }]
+    contents: [{ parts: [{ text: prompt }] }]
   };
-
   try {
     const res = await fetch(URL_API, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-    
     const data = await res.json();
-    
-    // Extrae el texto limpio que responde Gemini
     return data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Sin respuesta de la IA.';
   } catch (e) {
     console.error("Error al conectar con Gemini:", e);
-    return '⚠️ No se pudo conectar con la IA de Google. Verifica tu API key.';
+    return '⚠️ No se pudo conectar con la IA.';
   }
 }
 
 // ============================================================
-// SISTEMA DE PREDICCIÓN DE VENTAS (Conexión Supabase + IA)
+// SISTEMA DE PREDICCIÓN DE VENTAS
 // ============================================================
 async function generarPrediccionVentas() {
   if (!empData) return "⚠️ No se han cargado los datos del emprendimiento.";
-
-  // 1. Traer el historial de ingresos (ventas) desde tu Supabase
   const { data: ventas, error } = await sb
     .from('transaccion')
     .select('monto, fecha_transaccion, descripcion')
     .eq('id_emprendimiento', empData.id_emprendimiento)
     .eq('tipo', 'INGRESO')
     .order('fecha_transaccion', { ascending: true });
-
-  if (error) {
-    console.error("Error al obtener ventas de Supabase:", error);
-    return "❌ Error al leer los datos de ventas.";
-  }
-
-  if (!ventas || ventas.length === 0) {
-    return "📊 Aún no tienes un historial de ventas registrado en tu base de datos de Supabase para poder hacer una predicción.";
-  }
-
-  // 2. Estructurar la orden con tus datos reales para Gemini
+  if (error) return "❌ Error al leer los datos de ventas.";
+  if (!ventas || ventas.length === 0) return "📊 Aún no tienes un historial de ventas registrado.";
   const promptEspecial = `
     Actúa como un experto en Business Intelligence y analítica de datos comerciales. 
     Analiza el siguiente historial real de transacciones de venta de mi negocio:
     ${JSON.stringify(ventas)}
-
     Con base en estos datos históricos, genera un informe de predicción breve para el próximo mes en español:
     1. Una estimación del total de ventas esperado (en Bs.).
     2. Tendencias identificadas (días fuertes, productos o descripciones frecuentes).
     3. Dos consejos comerciales específicos basados en los números para mejorar las ventas.
     Sé claro, directo y utiliza un tono profesional.
   `;
-
-  // 3. Llamar a Gemini y retornar el análisis final
-  const resultadoIA = await llamarIA(promptEspecial);
-  return resultadoIA;
+  return await llamarIA(promptEspecial);
 }
 
 // ============================================================
-// ══════════════════════════════════════════════════════════
-//  EMPRENDEDOR
-// ══════════════════════════════════════════════════════════
+// EMPRENDEDOR
 // ============================================================
 let empData = null;
+let empDataReady = false;
 let estrellasSeleccionadas = 0;
 let empIdActualModal = null;
 let prodIdActualModal = null;
+
+// Función para esperar a que empData esté listo
+async function waitForEmpData() {
+  let intentos = 0;
+  while (!empDataReady && intentos < 50) {
+    await new Promise(r => setTimeout(r, 100));
+    intentos++;
+  }
+  return empData;
+}
 
 async function initEmprendedor() {
   const session = requireRol('EMPRENDEDOR');
   if (!session) return;
 
-  // Bienvenida
+  empDataReady = false;
+
   const bienEl = document.getElementById('bienvenidaNombre');
   if (bienEl) bienEl.textContent = '👋 Bienvenido, ' + session.nombre + ' ' + session.apellido;
   const fechaEl = document.getElementById('bienvenidaFecha');
   if (fechaEl) fechaEl.textContent = '📅 ' + new Date().toLocaleDateString('es-BO', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
 
-  // Cargar o crear emprendimiento
   let { data } = await sb.from('emprendimiento').select('*').eq('id_usuario', session.id_usuario).single();
   if (!data) {
     const { data: nuevo } = await sb.from('emprendimiento').insert([{
@@ -200,23 +181,19 @@ async function initEmprendedor() {
       descripcion: '', categoria: '', direccion: '', telefono: ''
     }]).select().single();
     data = nuevo;
-    // Ir a configuración al primer login
-    setTimeout(() => verSeccion('configuracion', document.querySelector('.snav:last-child')), 500);
+    setTimeout(() => verSeccionEmp('configuracion', document.querySelector('.snav:last-child')), 500);
   }
   empData = data;
+  empDataReady = true;
 
   const subEl = document.getElementById('seccionSub');
   if (subEl) subEl.textContent = '🏪 ' + empData.nombre_negocio + (empData.categoria ? ' · ' + empData.categoria : '');
   const bienNeg = document.getElementById('bienvenidaNegocio');
   if (bienNeg) bienNeg.textContent = '🏪 ' + empData.nombre_negocio;
 
-  // Cargar foto de perfil
   cargarFotoEmprendedorHeader();
-  // Cargar config
   cargarConfigEmprendedor();
-  // Cargar datos del resumen
   await cargarResumen();
-  // Registrar visita propia (no contar, solo actualizar last_seen)
   await registrarVisitaEmprendedor(session.id_usuario);
 }
 
@@ -225,8 +202,10 @@ async function registrarVisitaEmprendedor(idUsuario) {
 }
 
 async function cargarResumen() {
-  if (!empData) return;
-  const { data: trans } = await sb.from('transaccion').select('monto, tipo').eq('id_emprendimiento', empData.id_emprendimiento);
+  const ed = await waitForEmpData();
+  if (!ed) return;
+
+  const { data: trans } = await sb.from('transaccion').select('monto, tipo').eq('id_emprendimiento', ed.id_emprendimiento);
   let ingresos = 0, egresos = 0;
   (trans || []).forEach(t => { if (t.tipo === 'INGRESO') ingresos += parseFloat(t.monto); else egresos += parseFloat(t.monto); });
   const setEl = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
@@ -235,14 +214,13 @@ async function cargarResumen() {
   setEl('kpiGanancia', 'Bs. ' + (ingresos - egresos).toFixed(2));
 
   const { count } = await sb.from('producto').select('*', { count: 'exact', head: true })
-    .eq('id_emprendimiento', empData.id_emprendimiento).eq('estado', true);
+    .eq('id_emprendimiento', ed.id_emprendimiento).eq('estado', true);
   setEl('kpiProductos', count || 0);
 
-  // Ventas hoy / mes / año
   const hoy = fechaHoyISO();
   const { mes, anio } = mesActual();
   const { data: ventas } = await sb.from('transaccion').select('monto, fecha_transaccion')
-    .eq('id_emprendimiento', empData.id_emprendimiento).eq('tipo', 'INGRESO');
+    .eq('id_emprendimiento', ed.id_emprendimiento).eq('tipo', 'INGRESO');
   let totalHoy = 0, totalMes = 0, totalAnio = 0;
   (ventas || []).forEach(v => {
     const f = new Date(v.fecha_transaccion);
@@ -255,17 +233,14 @@ async function cargarResumen() {
   setEl('ventasMes', 'Bs. ' + totalMes.toFixed(2));
   setEl('ventasAnio', 'Bs. ' + totalAnio.toFixed(2));
 
-  // Clientes únicos
-  const { data: ordenes } = await sb.from('orden').select('id_comprador').eq('id_emprendimiento', empData.id_emprendimiento);
+  const { data: ordenes } = await sb.from('orden').select('id_comprador').eq('id_emprendimiento', ed.id_emprendimiento);
   const clientesUnicos = new Set((ordenes || []).map(o => o.id_comprador)).size;
   setEl('totalClientes', clientesUnicos);
 
-  // Visitas hoy
   const { count: visitas } = await sb.from('visita_producto').select('*', { count: 'exact', head: true })
-    .eq('id_emprendimiento', empData.id_emprendimiento).gte('fecha_visita', hoy);
+    .eq('id_emprendimiento', ed.id_emprendimiento).gte('fecha_visita', hoy);
   setEl('visitasHoy', visitas || 0);
 
-  // Alertas resumen
   const ids = await getProductIds();
   const alertasEl = document.getElementById('alertasResumen');
   if (alertasEl) {
@@ -279,8 +254,9 @@ async function cargarResumen() {
 }
 
 async function getProductIds() {
-  if (!empData) return [];
-  const { data } = await sb.from('producto').select('id_producto').eq('id_emprendimiento', empData.id_emprendimiento);
+  const ed = await waitForEmpData();
+  if (!ed) return [];
+  const { data } = await sb.from('producto').select('id_producto').eq('id_emprendimiento', ed.id_emprendimiento);
   return (data || []).map(p => p.id_producto);
 }
 
@@ -301,7 +277,8 @@ function previsualizarFotoProducto(event) {
 }
 
 async function agregarProducto() {
-  if (!empData) return;
+  const ed = await waitForEmpData();
+  if (!ed) return;
   const nombre    = document.getElementById('prodNombre')?.value.trim();
   const desc      = document.getElementById('prodDesc')?.value.trim();
   const categoria = document.getElementById('prodCategoria')?.value;
@@ -314,7 +291,7 @@ async function agregarProducto() {
   if (fileInput?.files[0]) {
     const file = fileInput.files[0];
     const ext = file.name.split('.').pop();
-    const path = `productos/${empData.id_emprendimiento}/${Date.now()}.${ext}`;
+    const path = `productos/${ed.id_emprendimiento}/${Date.now()}.${ext}`;
     const { data: up } = await sb.storage.from('emprendia').upload(path, file, { upsert: true });
     if (up) {
       const { data: url } = sb.storage.from('emprendia').getPublicUrl(path);
@@ -323,7 +300,7 @@ async function agregarProducto() {
   }
 
   const { data: prod, error } = await sb.from('producto').insert([{
-    id_emprendimiento: empData.id_emprendimiento,
+    id_emprendimiento: ed.id_emprendimiento,
     nombre_producto: nombre, descripcion: desc, categoria, precio, foto_url
   }]).select().single();
 
@@ -331,7 +308,7 @@ async function agregarProducto() {
 
   await sb.from('inventario').insert([{ id_producto: prod.id_producto, stock_actual: stock, stock_minimo: 5, stock_maximo: 100 }]);
   if (stock === 0) {
-    await sb.from('alerta').insert([{ id_producto: prod.id_producto, tipo_alerta: 'STOCK_BAJO', mensaje: `Producto "${nombre}" recién creado con stock 0. Actualiza tu inventario.` }]);
+    await sb.from('alerta').insert([{ id_producto: prod.id_producto, tipo_alerta: 'STOCK_BAJO', mensaje: `Producto "${nombre}" recién creado con stock 0.` }]);
   }
 
   document.getElementById('prodNombre').value = '';
@@ -345,9 +322,10 @@ async function agregarProducto() {
 }
 
 async function cargarCatalogoProductos() {
-  if (!empData) return;
+  const ed = await waitForEmpData();
+  if (!ed) return;
   const { data } = await sb.from('producto').select('*, inventario(stock_actual)')
-    .eq('id_emprendimiento', empData.id_emprendimiento).order('fecha_registro', { ascending: false });
+    .eq('id_emprendimiento', ed.id_emprendimiento).order('fecha_registro', { ascending: false });
   const grid = document.getElementById('catalogoProductos');
   if (!grid) return;
   if (!data || data.length === 0) { grid.innerHTML = '<p class="cargando">Sin productos aún. ¡Agrega el primero!</p>'; return; }
@@ -416,6 +394,8 @@ function previsualizarFotoEditar(event) {
 }
 
 async function guardarEdicionProducto() {
+  const ed = await waitForEmpData();
+  if (!ed) return;
   const id        = document.getElementById('editProdId')?.value;
   const nombre    = document.getElementById('editProdNombre')?.value.trim();
   const desc      = document.getElementById('editProdDesc')?.value.trim();
@@ -429,7 +409,7 @@ async function guardarEdicionProducto() {
   if (fileInput?.files[0]) {
     const file = fileInput.files[0];
     const ext = file.name.split('.').pop();
-    const path = `productos/${empData.id_emprendimiento}/${id}_edit.${ext}`;
+    const path = `productos/${ed.id_emprendimiento}/${id}_edit.${ext}`;
     const { data: up } = await sb.storage.from('emprendia').upload(path, file, { upsert: true });
     if (up) {
       const { data: url } = sb.storage.from('emprendia').getPublicUrl(path);
@@ -445,9 +425,10 @@ async function guardarEdicionProducto() {
 
 // ── ÓRDENES ──
 async function cargarOrdenes() {
-  if (!empData) return;
+  const ed = await waitForEmpData();
+  if (!ed) return;
   const { data } = await sb.from('orden').select('*, usuario(nombre, apellido)')
-    .eq('id_emprendimiento', empData.id_emprendimiento).order('fecha_orden', { ascending: false });
+    .eq('id_emprendimiento', ed.id_emprendimiento).order('fecha_orden', { ascending: false });
   const tbody = document.getElementById('cuerpoOrdenes');
   if (!tbody) return;
   if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="10" class="cargando">Sin órdenes aún</td></tr>'; return; }
@@ -471,8 +452,7 @@ async function cargarOrdenes() {
 let ordenActualId = null;
 async function abrirModalOrden(id) {
   ordenActualId = id;
-  const { data: o } = await sb.from('orden').select('*, usuario(nombre, apellido)')
-    .eq('id_orden', id).single();
+  const { data: o } = await sb.from('orden').select('*, usuario(nombre, apellido)').eq('id_orden', id).single();
   if (!o) return;
   document.getElementById('modalOrdenId').textContent = '#' + id;
   document.getElementById('modalOrdenComprador').textContent = (o.usuario?.nombre || '—') + ' ' + (o.usuario?.apellido || '');
@@ -508,8 +488,9 @@ async function guardarDetalleOrden() {
 
 // ── COMPRADORES ──
 async function cargarCompradores() {
-  if (!empData) return;
-  const { data: ordenes } = await sb.from('orden').select('id_comprador').eq('id_emprendimiento', empData.id_emprendimiento);
+  const ed = await waitForEmpData();
+  if (!ed) return;
+  const { data: ordenes } = await sb.from('orden').select('id_comprador').eq('id_emprendimiento', ed.id_emprendimiento);
   const ids = [...new Set((ordenes || []).map(o => o.id_comprador))].filter(Boolean);
   const grid = document.getElementById('gridCompradores');
   if (!grid) return;
@@ -518,9 +499,9 @@ async function cargarCompradores() {
   if (!usuarios || usuarios.length === 0) { grid.innerHTML = '<p class="cargando">Sin compradores aún.</p>'; return; }
   grid.innerHTML = await Promise.all(usuarios.map(async u => {
     const { count: nCompras } = await sb.from('orden').select('*', { count: 'exact', head: true })
-      .eq('id_comprador', u.id_usuario).eq('id_emprendimiento', empData.id_emprendimiento);
+      .eq('id_comprador', u.id_usuario).eq('id_emprendimiento', ed.id_emprendimiento);
     const { data: ultimaOrden } = await sb.from('orden').select('total')
-      .eq('id_comprador', u.id_usuario).eq('id_emprendimiento', empData.id_emprendimiento);
+      .eq('id_comprador', u.id_usuario).eq('id_emprendimiento', ed.id_emprendimiento);
     const totalGastado = (ultimaOrden || []).reduce((s, o) => s + parseFloat(o.total || 0), 0);
     const ultimoAcceso = u.ultimo_acceso ? new Date(u.ultimo_acceso) : null;
     const ahora = new Date();
@@ -548,10 +529,12 @@ async function cargarCompradores() {
 }
 
 async function abrirHistorialComprador(idUsuario) {
+  const ed = await waitForEmpData();
+  if (!ed) return;
   const { data: u } = await sb.from('usuario').select('*').eq('id_usuario', idUsuario).single();
   if (!u) return;
   const { data: ordenes } = await sb.from('orden').select('*')
-    .eq('id_comprador', idUsuario).eq('id_emprendimiento', empData.id_emprendimiento)
+    .eq('id_comprador', idUsuario).eq('id_emprendimiento', ed.id_emprendimiento)
     .order('fecha_orden', { ascending: false });
   const total = (ordenes || []).reduce((s, o) => s + parseFloat(o.total || 0), 0);
   const ultimoAcceso = u.ultimo_acceso ? new Date(u.ultimo_acceso) : null;
@@ -562,12 +545,22 @@ async function abrirHistorialComprador(idUsuario) {
   document.getElementById('modalCompradorNombre').textContent = u.nombre + ' ' + u.apellido;
   document.getElementById('modalCompradorId').textContent = 'ID: ' + u.id_usuario;
   const estadoEl = document.getElementById('modalCompradorEstado');
-  if (estadoEl) { estadoEl.textContent = activo ? '🟢 En línea' : '⚫ Inactivo'; estadoEl.style.background = activo ? '#dcfce7' : '#f1f5f9'; estadoEl.style.color = activo ? '#166534' : '#64748b'; estadoEl.style.padding = '3px 10px'; estadoEl.style.borderRadius = '100px'; estadoEl.style.fontSize = '0.78rem'; }
+  if (estadoEl) {
+    estadoEl.textContent = activo ? '🟢 En línea' : '⚫ Inactivo';
+    estadoEl.style.background = activo ? '#dcfce7' : '#f1f5f9';
+    estadoEl.style.color = activo ? '#166534' : '#64748b';
+    estadoEl.style.padding = '3px 10px';
+    estadoEl.style.borderRadius = '100px';
+    estadoEl.style.fontSize = '0.78rem';
+  }
   document.getElementById('modalCompradorCompras').textContent = ordenes?.length || 0;
   document.getElementById('modalCompradorTotal').textContent = 'Bs. ' + total.toFixed(2);
   const fotoEl = document.getElementById('modalCompradorFoto');
   const iconEl = document.getElementById('modalCompradorFotoIcon');
-  if (u.foto_url) { if (fotoEl) { fotoEl.src = u.foto_url; fotoEl.style.display = 'block'; } if (iconEl) iconEl.style.display = 'none'; }
+  if (u.foto_url) {
+    if (fotoEl) { fotoEl.src = u.foto_url; fotoEl.style.display = 'block'; }
+    if (iconEl) iconEl.style.display = 'none';
+  }
   const tbody = document.getElementById('modalCompradorHistorial');
   if (tbody) {
     tbody.innerHTML = (!ordenes || ordenes.length === 0)
@@ -594,8 +587,9 @@ function cerrarModalComprador() {
 
 // ── MÉTODOS DE PAGO ──
 async function cargarMetodosPago() {
-  if (!empData) return;
-  const { data } = await sb.from('metodo_pago').select('*').eq('id_emprendimiento', empData.id_emprendimiento).single();
+  const ed = await waitForEmpData();
+  if (!ed) return;
+  const { data } = await sb.from('metodo_pago').select('*').eq('id_emprendimiento', ed.id_emprendimiento).single();
   const toggleEfec = document.getElementById('toggleEfectivo');
   if (toggleEfec && data) toggleEfec.checked = data.acepta_efectivo || false;
   await cargarQRs();
@@ -603,8 +597,9 @@ async function cargarMetodosPago() {
 }
 
 async function cargarQRs() {
-  if (!empData) return;
-  const { data } = await sb.from('qr_pago').select('*').eq('id_emprendimiento', empData.id_emprendimiento);
+  const ed = await waitForEmpData();
+  if (!ed) return;
+  const { data } = await sb.from('qr_pago').select('*').eq('id_emprendimiento', ed.id_emprendimiento);
   const lista = document.getElementById('listaQRs');
   if (!lista) return;
   lista.innerHTML = (!data || data.length === 0)
@@ -613,15 +608,16 @@ async function cargarQRs() {
 }
 
 async function agregarQR(event) {
-  if (!empData) return;
+  const ed = await waitForEmpData();
+  if (!ed) return;
   const file = event.target.files[0];
   if (!file) return;
   const ext = file.name.split('.').pop();
-  const path = `qrs/${empData.id_emprendimiento}/${Date.now()}.${ext}`;
+  const path = `qrs/${ed.id_emprendimiento}/${Date.now()}.${ext}`;
   const { data: up } = await sb.storage.from('emprendia').upload(path, file, { upsert: true });
   if (!up) { alert('Error subiendo QR'); return; }
   const { data: url } = sb.storage.from('emprendia').getPublicUrl(path);
-  await sb.from('qr_pago').insert([{ id_emprendimiento: empData.id_emprendimiento, url_imagen: url.publicUrl }]);
+  await sb.from('qr_pago').insert([{ id_emprendimiento: ed.id_emprendimiento, url_imagen: url.publicUrl }]);
   event.target.value = '';
   await cargarQRs();
 }
@@ -632,19 +628,21 @@ async function eliminarQR(id) {
 }
 
 async function guardarMetodoPago() {
-  if (!empData) return;
+  const ed = await waitForEmpData();
+  if (!ed) return;
   const acepta = document.getElementById('toggleEfectivo')?.checked || false;
-  const { data: exist } = await sb.from('metodo_pago').select('id_metodo').eq('id_emprendimiento', empData.id_emprendimiento).single();
+  const { data: exist } = await sb.from('metodo_pago').select('id_metodo').eq('id_emprendimiento', ed.id_emprendimiento).single();
   if (exist) {
-    await sb.from('metodo_pago').update({ acepta_efectivo: acepta }).eq('id_emprendimiento', empData.id_emprendimiento);
+    await sb.from('metodo_pago').update({ acepta_efectivo: acepta }).eq('id_emprendimiento', ed.id_emprendimiento);
   } else {
-    await sb.from('metodo_pago').insert([{ id_emprendimiento: empData.id_emprendimiento, acepta_efectivo: acepta }]);
+    await sb.from('metodo_pago').insert([{ id_emprendimiento: ed.id_emprendimiento, acepta_efectivo: acepta }]);
   }
 }
 
 async function cargarLugaresEntrega() {
-  if (!empData) return;
-  const { data } = await sb.from('lugar_entrega').select('*').eq('id_emprendimiento', empData.id_emprendimiento);
+  const ed = await waitForEmpData();
+  if (!ed) return;
+  const { data } = await sb.from('lugar_entrega').select('*').eq('id_emprendimiento', ed.id_emprendimiento);
   const lista = document.getElementById('listaEntregas');
   if (!lista) return;
   lista.innerHTML = (!data || data.length === 0)
@@ -653,11 +651,12 @@ async function cargarLugaresEntrega() {
 }
 
 async function agregarLugarEntrega() {
-  if (!empData) return;
+  const ed = await waitForEmpData();
+  if (!ed) return;
   const tipo  = document.getElementById('tipoEntrega')?.value;
   const lugar = document.getElementById('lugarEntrega')?.value.trim();
   if (!lugar) { alert('Ingresa un lugar.'); return; }
-  await sb.from('lugar_entrega').insert([{ id_emprendimiento: empData.id_emprendimiento, tipo, lugar }]);
+  await sb.from('lugar_entrega').insert([{ id_emprendimiento: ed.id_emprendimiento, tipo, lugar }]);
   document.getElementById('lugarEntrega').value = '';
   await cargarLugaresEntrega();
 }
@@ -672,8 +671,9 @@ async function cargarInventario() {
   const ids = await getProductIds();
   const tbody = document.getElementById('tablaInventario');
   if (!tbody) return;
-  if (!ids.length) { tbody.innerHTML = '<tr><td colspan="5" class="cargando">Sin productos</td></tr>'; return; }
+  if (!ids.length) { tbody.innerHTML = '<tr><td colspan="5" class="cargando">Sin productos registrados aún</td></tr>'; return; }
   const { data } = await sb.from('inventario').select('*, producto(nombre_producto)').in('id_producto', ids).order('ultima_actualizacion', { ascending: false });
+  if (!tbody) return;
   tbody.innerHTML = (!data || data.length === 0)
     ? '<tr><td colspan="5" class="cargando">Sin inventario aún</td></tr>'
     : data.map(i => `<tr>
@@ -691,12 +691,13 @@ function toggleFormTrans() {
 }
 
 async function agregarTransaccion() {
-  if (!empData) return;
+  const ed = await waitForEmpData();
+  if (!ed) return;
   const monto = parseFloat(document.getElementById('transMonto')?.value);
   const tipo  = document.getElementById('transTipo')?.value;
   const desc  = document.getElementById('transDesc')?.value.trim();
   if (isNaN(monto) || monto <= 0) { alert('Ingresa un monto válido.'); return; }
-  const { error } = await sb.from('transaccion').insert([{ id_emprendimiento: empData.id_emprendimiento, monto, tipo, descripcion: desc }]);
+  const { error } = await sb.from('transaccion').insert([{ id_emprendimiento: ed.id_emprendimiento, monto, tipo, descripcion: desc }]);
   if (error) { alert('Error: ' + error.message); return; }
   document.getElementById('transMonto').value = '';
   document.getElementById('transDesc').value = '';
@@ -706,8 +707,9 @@ async function agregarTransaccion() {
 }
 
 async function cargarTransacciones() {
-  if (!empData) return;
-  const { data } = await sb.from('transaccion').select('*').eq('id_emprendimiento', empData.id_emprendimiento).order('fecha_transaccion', { ascending: false });
+  const ed = await waitForEmpData();
+  if (!ed) return;
+  const { data } = await sb.from('transaccion').select('*').eq('id_emprendimiento', ed.id_emprendimiento).order('fecha_transaccion', { ascending: false });
   const tbody = document.getElementById('tablaTransacciones');
   if (!tbody) return;
   tbody.innerHTML = (!data || data.length === 0)
@@ -725,7 +727,7 @@ async function cargarAlertas() {
   const ids = await getProductIds();
   const tbody = document.getElementById('tablaAlertas');
   if (!tbody) return;
-  if (!ids.length) { tbody.innerHTML = '<tr><td colspan="5" class="cargando">Sin alertas</td></tr>'; return; }
+  if (!ids.length) { tbody.innerHTML = '<tr><td colspan="5" class="cargando">Sin alertas — agrega productos primero</td></tr>'; return; }
   const { data } = await sb.from('alerta').select('*, producto(nombre_producto)').in('id_producto', ids).order('fecha_alerta', { ascending: false });
   tbody.innerHTML = (!data || data.length === 0)
     ? '<tr><td colspan="5" class="cargando">Sin alertas</td></tr>'
@@ -743,7 +745,7 @@ async function cargarPredicciones() {
   const ids = await getProductIds();
   const tbody = document.getElementById('tablaPredicciones');
   if (!tbody) return;
-  if (!ids.length) { tbody.innerHTML = '<tr><td colspan="5" class="cargando">Sin predicciones</td></tr>'; return; }
+  if (!ids.length) { tbody.innerHTML = '<tr><td colspan="5" class="cargando">Sin predicciones — agrega productos primero</td></tr>'; return; }
   const { data } = await sb.from('prediccion_ia').select('*, producto(nombre_producto)').in('id_producto', ids).order('fecha_prediccion', { ascending: false });
   tbody.innerHTML = (!data || data.length === 0)
     ? '<tr><td colspan="5" class="cargando">Sin predicciones aún</td></tr>'
@@ -761,11 +763,11 @@ let chartDiaEmp = null;
 let chartMesEmp = null;
 
 async function cargarIAVentasEmprendedor() {
-  if (!empData) return;
+  const ed = await waitForEmpData();
+  if (!ed) return;
   const { data: ventas } = await sb.from('transaccion').select('monto, fecha_transaccion')
-    .eq('id_emprendimiento', empData.id_emprendimiento).eq('tipo', 'INGRESO').order('fecha_transaccion', { ascending: false });
+    .eq('id_emprendimiento', ed.id_emprendimiento).eq('tipo', 'INGRESO').order('fecha_transaccion', { ascending: false });
 
-  // Últimos 7 días
   const dias7 = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date(); d.setDate(d.getDate() - i);
@@ -775,7 +777,6 @@ async function cargarIAVentasEmprendedor() {
     dias7.push({ label, total });
   }
 
-  // Por mes
   const meses12 = [];
   const anio = new Date().getFullYear();
   for (let m = 1; m <= 12; m++) {
@@ -786,7 +787,6 @@ async function cargarIAVentasEmprendedor() {
     meses12.push({ label: formatMes(m).substring(0, 3), total });
   }
 
-  // Gráfico días
   const ctxDia = document.getElementById('chartVentasDia');
   if (ctxDia) {
     if (chartDiaEmp) chartDiaEmp.destroy();
@@ -797,7 +797,6 @@ async function cargarIAVentasEmprendedor() {
     });
   }
 
-  // Gráfico meses
   const ctxMes = document.getElementById('chartVentasMes');
   if (ctxMes) {
     if (chartMesEmp) chartMesEmp.destroy();
@@ -808,19 +807,19 @@ async function cargarIAVentasEmprendedor() {
     });
   }
 
-  // Análisis IA
   await analizarVentasIA();
 }
 
 async function analizarVentasIA() {
+  const ed = await waitForEmpData();
+  if (!ed) return;
   const boxEl = document.getElementById('iaAnalisisEmprendedor');
   if (!boxEl) return;
   boxEl.innerHTML = '<div class="ia-loading">🤖 Analizando tus ventas con IA...</div>';
-  if (!empData) return;
   const { data: ventas } = await sb.from('transaccion').select('monto, fecha_transaccion')
-    .eq('id_emprendimiento', empData.id_emprendimiento).eq('tipo', 'INGRESO').limit(50);
+    .eq('id_emprendimiento', ed.id_emprendimiento).eq('tipo', 'INGRESO').limit(50);
   const prompt = `Eres un asesor de negocios para microemprendedores bolivianos. 
-Analiza estos datos de ventas del emprendimiento "${empData.nombre_negocio}" (categoría: ${empData.categoria || 'general'}):
+Analiza estos datos de ventas del emprendimiento "${ed.nombre_negocio}" (categoría: ${ed.categoria || 'general'}):
 Ventas recientes: ${JSON.stringify((ventas || []).slice(0, 20))}
 Indica en 3-4 párrafos cortos:
 1. Tendencia actual (subiendo/bajando/estable)
@@ -834,24 +833,22 @@ Responde en español, de forma clara y motivadora.`;
 
 // ── CONFIGURACIÓN EMPRENDEDOR ──
 async function cargarConfigEmprendedor() {
-  if (!empData) return;
+  const ed = await waitForEmpData();
+  if (!ed) return;
   const el = (id, v) => { const e = document.getElementById(id); if (e) e.value = v || ''; };
-  el('confNombreNegocio', empData.nombre_negocio);
-  el('confCategoriaNegocio', empData.categoria);
-  el('confCelular', empData.telefono);
-
-  if (empData.foto_url) {
+  el('confNombreNegocio', ed.nombre_negocio);
+  el('confCategoriaNegocio', ed.categoria);
+  el('confCelular', ed.telefono);
+  if (ed.foto_url) {
     const prev = document.getElementById('fotoPreviewEmp');
     const ph   = document.getElementById('fotoPlaceholderEmp');
-    if (prev) { prev.src = empData.foto_url; prev.style.display = 'block'; }
+    if (prev) { prev.src = ed.foto_url; prev.style.display = 'block'; }
     if (ph) ph.style.display = 'none';
   }
 }
 
 async function cargarFotoEmprendedorHeader() {
-  if (empData?.foto_url) {
-    // Si tienes foto en header, ponla aquí
-  }
+  // placeholder para foto en header si se implementa
 }
 
 function previsualizarFotoEmp(event) {
@@ -868,28 +865,30 @@ function previsualizarFotoEmp(event) {
 }
 
 async function guardarFotoEmprendedor() {
-  if (!empData) return;
+  const ed = await waitForEmpData();
+  if (!ed) return;
   const fileInput = document.getElementById('inputFotoEmp');
   if (!fileInput?.files[0]) { alert('Selecciona una imagen primero.'); return; }
   const file = fileInput.files[0];
   const ext = file.name.split('.').pop();
-  const path = `emprendedores/${empData.id_emprendimiento}/perfil.${ext}`;
+  const path = `emprendedores/${ed.id_emprendimiento}/perfil.${ext}`;
   const { data: up, error } = await sb.storage.from('emprendia').upload(path, file, { upsert: true });
   if (error) { alert('Error: ' + error.message); return; }
   const { data: url } = sb.storage.from('emprendia').getPublicUrl(path);
-  await sb.from('emprendimiento').update({ foto_url: url.publicUrl }).eq('id_emprendimiento', empData.id_emprendimiento);
+  await sb.from('emprendimiento').update({ foto_url: url.publicUrl }).eq('id_emprendimiento', ed.id_emprendimiento);
   empData.foto_url = url.publicUrl;
   alert('✅ Foto guardada correctamente.');
 }
 
 async function guardarDatosNegocio() {
-  if (!empData) return;
+  const ed = await waitForEmpData();
+  if (!ed) return;
   const nombre    = document.getElementById('confNombreNegocio')?.value.trim();
   const categoria = document.getElementById('confCategoriaNegocio')?.value;
   const telefono  = document.getElementById('confCelular')?.value.trim();
   const msg = document.getElementById('msgDatosNegocio');
   if (!nombre) { if (msg) msg.textContent = '⚠️ El nombre es obligatorio.'; return; }
-  const { error } = await sb.from('emprendimiento').update({ nombre_negocio: nombre, categoria, telefono }).eq('id_emprendimiento', empData.id_emprendimiento);
+  const { error } = await sb.from('emprendimiento').update({ nombre_negocio: nombre, categoria, telefono }).eq('id_emprendimiento', ed.id_emprendimiento);
   if (error) { if (msg) { msg.style.color = '#ef4444'; msg.textContent = '❌ Error: ' + error.message; } return; }
   empData.nombre_negocio = nombre; empData.categoria = categoria; empData.telefono = telefono;
   if (msg) { msg.style.color = '#22c55e'; msg.textContent = '✅ Datos guardados correctamente.'; }
@@ -923,26 +922,26 @@ async function cambiarPasswordEmp() {
   document.getElementById('confConfirmarPass').value = '';
 }
 
-// ── NAVEGACIÓN EMPRENDEDOR ──
-function verSeccion(nombre, el) {
+// ── NAVEGACIÓN EMPRENDEDOR (renombrada para no pisar la del admin) ──
+function verSeccionEmp(nombre, el) {
   document.querySelectorAll('.seccion').forEach(s => s.classList.remove('activo'));
   document.querySelectorAll('.snav').forEach(n => n.classList.remove('active'));
   const sec = document.getElementById('sec-' + nombre);
   if (sec) sec.classList.add('activo');
   if (el) { el.classList.add('active'); el.blur(); }
   const titulos = {
-    resumen: ['Mi Emprendimiento', ''],
-    productos: ['Gestionar Productos', 'Catálogo de tu negocio'],
-    ordenes: ['Estado de Órdenes', 'Flujo y auditoría de pedidos'],
-    compradores: ['Perfiles de Compradores', 'Tus clientes'],
-    pagos: ['Métodos de Pago', 'QR y efectivo'],
-    inventario: ['Inventario', 'Control de stock'],
-    transacciones: ['Transacciones', 'Ingresos y egresos'],
-    alertas: ['Alertas', 'Notificaciones del sistema'],
-    predicciones: ['Predicciones IA', 'Análisis inteligente'],
-    'ia-ventas': ['Análisis IA Ventas', 'Tendencias de tu negocio'],
-    normas: ['Normas del Sistema', 'Reglas de la plataforma'],
-    configuracion: ['Configuración de Perfil', 'Datos de tu negocio']
+    resumen:        ['Mi Emprendimiento', ''],
+    productos:      ['Gestionar Productos', 'Catálogo de tu negocio'],
+    ordenes:        ['Estado de Órdenes', 'Flujo y auditoría de pedidos'],
+    compradores:    ['Perfiles de Compradores', 'Tus clientes'],
+    pagos:          ['Métodos de Pago', 'QR y efectivo'],
+    inventario:     ['Inventario', 'Control de stock'],
+    transacciones:  ['Transacciones', 'Ingresos y egresos'],
+    alertas:        ['Alertas', 'Notificaciones del sistema'],
+    predicciones:   ['Predicciones IA', 'Análisis inteligente'],
+    'ia-ventas':    ['Análisis IA Ventas', 'Tendencias de tu negocio'],
+    normas:         ['Normas del Sistema', 'Reglas de la plataforma'],
+    configuracion:  ['Configuración de Perfil', 'Datos de tu negocio']
   };
   const t = titulos[nombre];
   if (t) {
@@ -951,23 +950,28 @@ function verSeccion(nombre, el) {
     if (tEl) tEl.textContent = t[0];
     if (sEl && nombre !== 'resumen') sEl.textContent = t[1];
   }
-  if (nombre === 'resumen') cargarResumen();
-  else if (nombre === 'productos') cargarCatalogoProductos();
-  else if (nombre === 'ordenes') cargarOrdenes();
+  if (nombre === 'resumen')          cargarResumen();
+  else if (nombre === 'productos')   cargarCatalogoProductos();
+  else if (nombre === 'ordenes')     cargarOrdenes();
   else if (nombre === 'compradores') cargarCompradores();
-  else if (nombre === 'pagos') cargarMetodosPago();
-  else if (nombre === 'inventario') cargarInventario();
+  else if (nombre === 'pagos')       cargarMetodosPago();
+  else if (nombre === 'inventario')  cargarInventario();
   else if (nombre === 'transacciones') cargarTransacciones();
-  else if (nombre === 'alertas') cargarAlertas();
+  else if (nombre === 'alertas')     cargarAlertas();
   else if (nombre === 'predicciones') cargarPredicciones();
-  else if (nombre === 'ia-ventas') cargarIAVentasEmprendedor();
+  else if (nombre === 'ia-ventas')   cargarIAVentasEmprendedor();
   else if (nombre === 'configuracion') cargarConfigEmprendedor();
 }
 
+// Alias para compatibilidad con onclick en el HTML que use verSeccion
+function verSeccion(nombre, el) {
+  const page = location.pathname.split('/').pop();
+  if (page === 'emprendedor.html') verSeccionEmp(nombre, el);
+  else verSeccionAdmin(nombre, el);
+}
+
 // ============================================================
-// ══════════════════════════════════════════════════════════
-//  COMPRADOR
-// ══════════════════════════════════════════════════════════
+// COMPRADOR
 // ============================================================
 let carrito = [];
 let categoriaActiva = '';
@@ -983,7 +987,6 @@ async function initComprador() {
   if (bienEl) bienEl.textContent = '👋 Bienvenido, ' + session.nombre;
   const h2 = document.getElementById('bienvenidaCompradorNombre');
   if (h2) h2.textContent = '👋 Bienvenido, ' + session.nombre + ' ' + session.apellido;
-  // Registrar visita
   await sb.from('usuario').update({ ultimo_acceso: new Date().toISOString() }).eq('id_usuario', session.id_usuario);
   await cargarProductosComprador();
   await cargarPerfilesEmprendedores();
@@ -1046,7 +1049,6 @@ async function abrirModalProducto(idProducto) {
     .eq('id_producto', idProducto).single();
   if (!p) return;
   productoActualModal = p;
-  // Registrar visita
   const session = getSession();
   if (session) {
     await sb.from('visita_producto').insert([{ id_producto: idProducto, id_emprendimiento: p.id_emprendimiento, id_usuario: session.id_usuario }]).then(() => {});
@@ -1061,7 +1063,6 @@ async function abrirModalProducto(idProducto) {
   if (p.foto_url) { if (fotoEl) { fotoEl.src = p.foto_url; fotoEl.style.display = 'block'; } if (phEl) phEl.style.display = 'none'; }
   else { if (fotoEl) fotoEl.style.display = 'none'; if (phEl) phEl.style.display = 'flex'; }
 
-  // Modos de entrega del emprendimiento
   const { data: lugares } = await sb.from('lugar_entrega').select('*').eq('id_emprendimiento', p.id_emprendimiento);
   const entregasEl = document.getElementById('modalEntregaOpciones');
   if (entregasEl) {
@@ -1070,7 +1071,6 @@ async function abrirModalProducto(idProducto) {
       : lugares.map(l => `<div class="entrega-opcion" onclick="seleccionarEntrega('${l.tipo} · ${l.lugar}', this)">${l.tipo === 'Físico' ? '🤝' : l.tipo === 'InDrive' ? '🚗' : '📦'} ${l.tipo} · ${l.lugar}</div>`).join('');
   }
 
-  // Métodos de pago
   const { data: mp } = await sb.from('metodo_pago').select('*').eq('id_emprendimiento', p.id_emprendimiento).single();
   const { data: qrs } = await sb.from('qr_pago').select('*').eq('id_emprendimiento', p.id_emprendimiento);
   const btnEf = document.getElementById('btnEfectivo');
@@ -1079,7 +1079,6 @@ async function abrirModalProducto(idProducto) {
   if (btnQR) btnQR.style.display = (qrs && qrs.length > 0) ? 'block' : 'none';
   document.getElementById('qrDisplay').style.display = 'none';
   document.getElementById('pagoEfectivoMsg').style.display = 'none';
-  // Guardar QRs para mostrar al seleccionar
   window._qrsActuales = qrs || [];
 
   document.getElementById('modalVerProducto').style.display = 'flex';
@@ -1189,7 +1188,6 @@ function abrirModalPedido() {
   }
   const totalEl = document.getElementById('resumenPedidoTotal');
   if (totalEl) totalEl.textContent = 'Bs. ' + total.toFixed(2);
-  // Cargar QRs del primer emprendedor del carrito
   if (carrito[0]?.empId) {
     sb.from('qr_pago').select('*').eq('id_emprendimiento', carrito[0].empId).then(({ data }) => { window._qrsActuales = data || []; });
   }
@@ -1209,10 +1207,7 @@ async function enviarPedidoFinal() {
   const modoEntrega = document.getElementById('pedidoModoEntrega')?.value;
   const nota        = document.getElementById('pedidoNota')?.value;
   const total       = carrito.reduce((s, c) => s + (parseFloat(c.precio) * c.qty), 0);
-  const detalleStr  = carrito.map(c => `${c.nombre} x${c.qty}`).join(', ');
-  const totalUnidades = carrito.reduce((s, c) => s + c.qty, 0);
 
-  // Agrupar por emprendimiento
   const porEmp = {};
   carrito.forEach(c => {
     if (!porEmp[c.empId]) porEmp[c.empId] = [];
@@ -1233,7 +1228,6 @@ async function enviarPedidoFinal() {
       metodo_pago: pagoSeleccionado || 'efectivo',
       nota
     }]);
-    // Registrar transacción de ingreso en el emprendimiento
     const { data: emprow } = await sb.from('emprendimiento').select('id_emprendimiento').eq('id_emprendimiento', parseInt(empId)).single();
     if (emprow) {
       await sb.from('transaccion').insert([{
@@ -1282,7 +1276,6 @@ async function abrirModalPerfilEmp(idEmp) {
   if (e.foto_url) { if (fotoEl) { fotoEl.src = e.foto_url; fotoEl.style.display = 'block'; } if (iconEl) iconEl.style.display = 'none'; }
   else { if (fotoEl) fotoEl.style.display = 'none'; if (iconEl) iconEl.style.display = 'flex'; }
 
-  // Rating
   const { data: resenas } = await sb.from('resena').select('*, usuario(nombre, apellido)').eq('id_emprendimiento', idEmp).order('fecha_resena', { ascending: false });
   const promedio = resenas?.length ? (resenas.reduce((s, r) => s + r.puntuacion, 0) / resenas.length) : 0;
   document.getElementById('modalEmpRatingNum').textContent = promedio ? promedio.toFixed(1) : '—';
@@ -1304,13 +1297,11 @@ async function abrirModalPerfilEmp(idEmp) {
           <div class="resena-texto">${r.comentario || ''}</div>
         </div>`).join('');
   }
-  // Reset estrellas input
   estrellasSeleccionadas = 0;
   document.querySelectorAll('.estrella-inp').forEach(e => e.classList.remove('seleccionada'));
   document.getElementById('resenaTexto').value = '';
   document.getElementById('msgResena').textContent = '';
 
-  // Productos del emprendedor
   const { data: prods } = await sb.from('producto').select('*').eq('id_emprendimiento', idEmp).eq('estado', true);
   const prodsEl = document.getElementById('modalEmpProductos');
   if (prodsEl) {
@@ -1369,9 +1360,7 @@ function cambiarTab(nombre, btn) {
 }
 
 // ============================================================
-// ══════════════════════════════════════════════════════════
-//  ADMIN
-// ══════════════════════════════════════════════════════════
+// ADMIN
 // ============================================================
 let empActualAdmin = null;
 let chartTorta = null;
@@ -1449,7 +1438,6 @@ async function verAccionesEmp(id) {
   if (btnS) btnS.style.display = suspendido ? 'none' : 'block';
   if (btnA) btnA.style.display = suspendido ? 'block' : 'none';
 
-  // Análisis IA infracciones
   const iaEl = document.getElementById('modalIAAnalisis');
   if (iaEl) {
     iaEl.innerHTML = '🤖 Analizando con IA...';
@@ -1502,7 +1490,6 @@ async function cargarVentasGlobalesAdmin() {
   const fi = document.getElementById('exportFechaHora');
   if (fi) fi.textContent = 'Última actualización: ' + new Date().toLocaleString('es-BO');
 
-  // Por día
   const porDia = {};
   (ventas || []).forEach(v => {
     const key = v.fecha_transaccion?.split('T')[0];
@@ -1519,7 +1506,6 @@ async function cargarVentasGlobalesAdmin() {
       : keys.map(k => `<tr><td>${k}</td><td>${porDia[k].n}</td><td>Bs. ${porDia[k].total.toFixed(2)}</td><td>${new Date().toLocaleString('es-BO')}</td></tr>`).join('');
   }
 
-  // Por mes
   const porMes = {};
   (ventas || []).forEach(v => {
     const f = new Date(v.fecha_transaccion);
@@ -1536,7 +1522,6 @@ async function cargarVentasGlobalesAdmin() {
       : keys.map(k => `<tr><td>${formatMes(porMes[k].mes)}</td><td>${porMes[k].anio}</td><td>${porMes[k].n}</td><td>Bs. ${porMes[k].total.toFixed(2)}</td></tr>`).join('');
   }
 
-  // Por año
   const porAnio = {};
   (ventas || []).forEach(v => {
     const a = new Date(v.fecha_transaccion).getFullYear();
@@ -1552,7 +1537,6 @@ async function cargarVentasGlobalesAdmin() {
       : keys.map(k => `<tr><td>${k}</td><td>${porAnio[k].n}</td><td>Bs. ${porAnio[k].total.toFixed(2)}</td></tr>`).join('');
   }
 
-  // Gráfico torta
   const ctx = document.getElementById('chartVentasTorta');
   if (ctx) {
     if (chartTorta) chartTorta.destroy();
@@ -1567,7 +1551,6 @@ async function cargarVentasGlobalesAdmin() {
     });
   }
 
-  // Análisis IA ventas globales
   const iaEl = document.getElementById('iaAnalisisVentas');
   if (iaEl) {
     iaEl.innerHTML = '<div class="ia-loading">🤖 Analizando ventas globales con IA...</div>';
@@ -1592,7 +1575,6 @@ async function exportarPDF() {
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.text('Generado: ' + new Date().toLocaleString('es-BO'), 14, 26);
-
   const { data: ventas } = await sb.from('transaccion').select('monto, fecha_transaccion').eq('tipo', 'INGRESO').order('fecha_transaccion', { ascending: false }).limit(50);
   let y = 36;
   doc.setFont('helvetica', 'bold');
@@ -1675,7 +1657,6 @@ async function guardarFotoPerfil() {
   if (error) { alert('Error: ' + error.message); return; }
   const { data: url } = sb.storage.from('emprendia').getPublicUrl(path);
   await sb.from('usuario').update({ foto_url: url.publicUrl }).eq('id_usuario', session.id_usuario);
-  // Mostrar en header y mini
   const fotoMini = document.getElementById('adminFotoMini');
   const iconoMini = document.getElementById('adminIconoMini');
   const fotoHeader = document.getElementById('adminFotoHeader');
@@ -1714,7 +1695,7 @@ async function cambiarCorreo() {
 }
 
 // ── NAVEGACIÓN ADMIN ──
-function verSeccion(nombre, el) {
+function verSeccionAdmin(nombre, el) {
   document.querySelectorAll('.seccion').forEach(s => s.classList.remove('activo'));
   document.querySelectorAll('.snav').forEach(n => n.classList.remove('active'));
   const sec = document.getElementById('sec-' + nombre);
@@ -1735,9 +1716,9 @@ function verSeccion(nombre, el) {
     if (tEl) tEl.textContent = t[0];
     if (sEl) sEl.textContent = t[1];
   }
-  if (nombre === 'usuarios')        cargarUsuariosAdmin();
+  if (nombre === 'usuarios')             cargarUsuariosAdmin();
   else if (nombre === 'emprendimientos') cargarEmprendimientosAdmin();
-  else if (nombre === 'ventas')         cargarVentasGlobalesAdmin();
+  else if (nombre === 'ventas')          cargarVentasGlobalesAdmin();
   else if (nombre === 'reportes')        cargarReportesAdmin();
   else if (nombre === 'documentos')      cargarDocumentosAdmin();
 }
